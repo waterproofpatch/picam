@@ -33,11 +33,11 @@ Deploy to production using AWS Beanstalk and Docker Hub.
 ### Build docker container
 
 ```bash
-docker build . -t waterproofpatch/vue-python-template
+docker build . -t waterproofpatch/pi-cam
 # test docker instance
-docker run -p 8080:80 waterproofpatch/vue-python-template
+docker run -p 8080:80 waterproofpatch/pi-cam
 # deploy to docker hub
-docker push waterproofpatch/vue-python-template
+docker push waterproofpatch/pi-cam
 ```
 
 ### Deploy to AWS
@@ -59,7 +59,7 @@ uwsgi --ini wsgi.ini
 ### EB Test
 
 ```bash
-eb init -p docker vue-python-template
+eb init -p docker pi-cam
 eb local run --port 5000
 eb open
 # then to deploy:
@@ -68,7 +68,7 @@ eb deploy VuePythonTemplate-env
 
 ## Pi Connection
 
-IP: 192.168.1.189 
+IP: 192.168.1.189
 
 To discover:
 
@@ -81,4 +81,3 @@ Then look for a device with "Raspberry pi foundation"
 ```bash
 ssh pi@192.168.1.189
 ```
-

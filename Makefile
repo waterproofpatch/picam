@@ -2,15 +2,15 @@
 
 # Build docker image. Docker hub account username is 'waterproofpatch'
 docker:
-	docker build . -t waterproofpatch/vue-python-template
+	docker build . -t waterproofpatch/pi-cam
 
 # Run the docker container locally
 run_docker: 
-	docker run -p 8080:80 waterproofpatch/vue-python-template
+	docker run -p 8080:80 waterproofpatch/pi-cam
 
 # Push docker image to docker hub. Assumes logged in using 'docker login'.
 push_docker:
-	docker push waterproofpatch/vue-python-template:latest
+	docker push waterproofpatch/pi-cam:latest
 
 # Deploy to AWS beanstock. Assumes logged into AWS.
 deploy: docker push_docker

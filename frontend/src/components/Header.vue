@@ -2,7 +2,7 @@
   <div class="header">
     <div class="inner-header">
       <div>
-        Vue-Python-Template
+        Pi-cam
       </div>
       <div>
         <ul>

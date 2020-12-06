@@ -12,7 +12,7 @@ tags.*
 # database stuff
 *.db
 Untitled.code-workspace
-vue-python-template.code-workspace
+pi-cam.code-workspace
 uploads/**
 
 # node stuff
