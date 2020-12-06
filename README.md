@@ -1,4 +1,4 @@
-# Vue-Python-Template
+# PiCam
 
 Template for setting up a simple RESTful API with authentication and backend models using Python's Flask microframework and VueJS for the frontend.
 
@@ -65,3 +65,20 @@ eb open
 # then to deploy:
 eb deploy VuePythonTemplate-env
 ```
+
+## Pi Connection
+
+IP: 192.168.1.189 
+
+To discover:
+
+```bash
+sudo nmap -sn 192.168.1.0/24 > first.txt
+```
+
+Then look for a device with "Raspberry pi foundation"
+
+```bash
+ssh pi@192.168.1.189
+```
+
