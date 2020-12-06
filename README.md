@@ -4,7 +4,7 @@ Template for setting up a simple RESTful API with authentication and backend mod
 
 ## Requirements
 
-- eb `brew install eb`
+- a raspberry pi
 - docker
 - nginx
 - uwsgi
@@ -28,25 +28,21 @@ python -m backend.app
 
 ## Production
 
-Deploy to production using AWS Beanstalk and Docker Hub.
-
 ### Build docker container
 
 ```bash
 docker build . -t waterproofpatch/pi-cam
 # test docker instance
 docker run -p 8080:80 waterproofpatch/pi-cam
-# deploy to docker hub
-docker push waterproofpatch/pi-cam
+# save to tarball
+docker save waterproofpatch/pi-cam:latest > pi-cam.docker.tar
 ```
 
-### Deploy to AWS
+### Deploy to Pi
 
 ```bash
 make deploy
 ```
-
-Then visit http://vuepythontemplate-env.ynepgp3pkf.us-west-2.elasticbeanstalk.com/#/
 
 ### Test UWSGI
 
@@ -54,16 +50,6 @@ Then visit http://vuepythontemplate-env.ynepgp3pkf.us-west-2.elasticbeanstalk.co
 uwsgi --socket 0.0.0.0:5000 --protocol=http --wsgi-file backend/app.py --callable app --virtualenv ./venv
 # or using wsgi ini file
 uwsgi --ini wsgi.ini
-```
-
-### EB Test
-
-```bash
-eb init -p docker pi-cam
-eb local run --port 5000
-eb open
-# then to deploy:
-eb deploy VuePythonTemplate-env
 ```
 
 ## Pi Connection

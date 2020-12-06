@@ -28,3 +28,4 @@ backend/models.py
 backend/.pytest_cache/v/cache/nodeids
 .coverage
 htmlcov
+pi-cam.docker.tar

@@ -1,3 +1,5 @@
+PI_ADDRESS=192.168.1.189
+
 .PHONY: test
 
 # Build docker image. Docker hub account username is 'waterproofpatch'
@@ -8,13 +10,9 @@ docker:
 run_docker: 
 	docker run -p 8080:80 waterproofpatch/pi-cam
 
-# Push docker image to docker hub. Assumes logged in using 'docker login'.
-push_docker:
-	docker push waterproofpatch/pi-cam:latest
-
 # Deploy to AWS beanstock. Assumes logged into AWS.
-deploy: docker push_docker
-	eb deploy VuePythonTemplate-env
+deploy: 
+	docker save waterproofpatch/pi-cam:latest > pi-cam.docker.tar
 
 # Start the wsgi server locally. Useful to verify the uwsgi config is working
 run_uwsgi:
@@ -31,6 +29,12 @@ run_frontend:
 # Run the tests and generate coverage
 test:
 	coverage run -m pytest backend/test -s && coverage html
+
+# update NPM libraries
+update:
+	# update NPM
+	npm install -g npm
+	(cd frontend && npm update --dev)
 
 # remove artifacts
 clean:
