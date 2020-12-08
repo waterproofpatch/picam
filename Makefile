@@ -12,8 +12,12 @@ PI_FILES=deploy.sh \
 
 .PHONY: test
 
+# Build frontend files for deployment
+build:
+	(cd frontend && npm run build)
+
 # Deploy to Pi
-deploy: 
+deploy: build
 	scp -r $(PI_FILES) $(PI_USER)@$(PI_ADDRESS):$(PI_DIR)
 
 # Start the wsgi server locally. Useful to verify the uwsgi config is working
