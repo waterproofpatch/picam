@@ -4,8 +4,12 @@
 echo "Init database..."
 source ./venv/bin/activate && python -m backend.app --init 
 
+# Stop any existing uwsgi server
+echo "Stopping old uwsgi..."
+./stop.sh
+
 # Start the WSGI server so the Flask app can receive requests from NGIN
-echo "Starting UWSGI..."
+echo "Starting uwsgi..."
 source ./venv/bin/activate && uwsgi --ini wsgi.ini &
 
 # Reload nginx

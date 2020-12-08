@@ -5,8 +5,9 @@ PI_FILES=deploy.sh \
 		 requirements.txt \
 		 nginx.site.conf \
 		 wsgi.ini \
-		 frontend/dist/ \
 		 start.sh \
+		 stop.sh \
+		 frontend/dist/ \
 		 backend/
 
 .PHONY: test
