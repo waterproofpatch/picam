@@ -5,7 +5,6 @@ Template for setting up a simple RESTful API with authentication and backend mod
 ## Requirements
 
 - a raspberry pi
-- docker
 - nginx
 - uwsgi
 
@@ -27,16 +26,6 @@ python -m backend.app
 ```
 
 ## Production
-
-### Build docker container
-
-```bash
-docker build . -t waterproofpatch/pi-cam
-# test docker instance
-docker run -p 8080:80 waterproofpatch/pi-cam
-# save to tarball
-docker save waterproofpatch/pi-cam:latest > pi-cam.docker.tar
-```
 
 ### Deploy to Pi
 

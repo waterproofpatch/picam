@@ -1,18 +1,19 @@
 PI_ADDRESS=192.168.1.189
+PI_USER=pi
+PI_DIR=~/workspace
+PI_FILES=deploy.sh \
+		 requirements.txt \
+		 nginx.site.conf \
+		 wsgi.ini \
+		 frontend/dist/ \
+		 start.sh \
+		 backend/
 
 .PHONY: test
 
-# Build docker image. Docker hub account username is 'waterproofpatch'
-docker:
-	docker build . -t waterproofpatch/pi-cam
-
-# Run the docker container locally
-run_docker: 
-	docker run -p 8080:80 waterproofpatch/pi-cam
-
-# Deploy to AWS beanstock. Assumes logged into AWS.
+# Deploy to Pi
 deploy: 
-	docker save waterproofpatch/pi-cam:latest > pi-cam.docker.tar
+	scp -r $(PI_FILES) $(PI_USER)@$(PI_ADDRESS):$(PI_DIR)
 
 # Start the wsgi server locally. Useful to verify the uwsgi config is working
 run_uwsgi:
