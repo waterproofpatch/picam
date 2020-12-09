@@ -36,8 +36,16 @@ def init_db(db, drop_all=False):
         db.drop_all()
     db.create_all()
 
-    image = models.Image(url="test.png")
+    image = models.Image(url="cam_images/test.png")
+    hashed_pw = models.User.generate_hash(
+        plaintext_password="passwordpassword".encode()
+    )
+    user = models.User(
+        email="test@gmail.com", password=base64.b64encode(hashed_pw).decode()
+    )
+
     db.session.add(image)
+    db.session.add(user)
 
     db.session.commit()
 
@@ -47,18 +55,21 @@ if __name__ == "__main__":
     Entry point
     """
     parser = argparse.ArgumentParser()
+
     parser.add_argument(
         "--dropall",
         action="store_true",
         required=False,
         help="drop tables in database before starting",
     )
+
     parser.add_argument(
         "--initonly",
         action="store_true",
         required=False,
         help="just init database and do nothing else",
     )
+
     args = parser.parse_args()
 
     init_db(db, drop_all=args.dropall)

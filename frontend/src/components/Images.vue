@@ -7,7 +7,8 @@
       v-for="image in images"
       v-bind:key="image.id"
     >
-      <p>Image filename is {{image.filename}}</p>
+      <p>Image URL is {{image.url}}</p>
+      <img v-bind:src=image.url>
     </div>
   </div>
 </template>

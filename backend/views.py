@@ -9,7 +9,7 @@ import uuid
 import time
 
 # flask imports
-from flask import jsonify
+from flask import jsonify, send_from_directory
 from flask_restful import Resource, request
 from flask_jwt_extended import (
     create_access_token,
@@ -31,6 +31,11 @@ from backend import jwt, db, flask_app, allowed_file, LOGGER
 
 # globals
 PASSWORD_MIN_LEN = 13
+
+
+@flask_app.route("/cam_images/<path:path>")
+def send_images(path):
+    return send_from_directory("cam_images", path)
 
 
 class Images(Resource):

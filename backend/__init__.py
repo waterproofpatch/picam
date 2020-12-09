@@ -60,7 +60,7 @@ def allowed_file(filename):
 
 def create_app():
 
-    app = Flask(__name__)
+    app = Flask(__name__, static_url_path="")
 
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
         "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "app.db")

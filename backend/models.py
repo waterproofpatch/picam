@@ -77,7 +77,6 @@ class Image(db.Model):
             "id": self.id,
             # "user_id": self.user.id, # this is sensitive, let's not reveal it
             "url": self.url,
-            "created_ok": self.created_on,
         }
 
         return payload
