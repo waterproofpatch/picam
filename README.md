@@ -36,7 +36,13 @@ make deploy
 ### Deploy and Start on Pi
 
 ```bash
+# first time
 ssh pi@192.168.1.189:~/workspace
+source venv/bin/activate
+pip install picamera
+sudo adduser pi www-data
+
+# every time
 ./deploy.sh
 ./start.sh
 ```

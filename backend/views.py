@@ -33,9 +33,12 @@ from backend import jwt, db, flask_app, allowed_file, LOGGER
 PASSWORD_MIN_LEN = 13
 
 
-@flask_app.route("/cam_images/<path:path>")
+@flask_app.route("/cam/<path:path>")
 def send_images(path):
-    return send_from_directory("cam_images", path)
+    """
+    Image file resolution for development
+    """
+    return send_from_directory("cam", path)
 
 
 class Images(Resource):
@@ -65,15 +68,16 @@ class Images(Resource):
             from picamera import PiCamera
 
             with PiCamera() as camera:
-                camera = PiCamera()
+                LOGGER.info("Capturing image...")
                 camera.resolution = (1024, 768)
                 camera.start_preview()
                 # Camera warm-up time
                 time.sleep(2)
-                camera.capture("foo.jpg")
+                camera.capture("/var/www/html/cam/foo.jpg")
+                LOGGER.info("Captured image...")
         except Exception as e:
-            error = e
-            return {"error": e.msg}, 400
+            LOGGER.error(e)
+            return {"error": "Failed taking picture"}, 400
 
         return {}
 

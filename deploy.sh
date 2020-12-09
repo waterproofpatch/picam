@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# python dependencies
-pip install picamera --user
-
 # directory dependencies
 sudo mkdir -p /var/www/wsgi
 sudo mkdir -p /var/www/html/cam
@@ -23,4 +20,7 @@ sudo chown -R pi:pi /var/run/wsgi
 sudo chown -R www-data:www-data /var/www/html
 sudo chown -R www-data:www-data /var/www/html/cam
 sudo chown -R www-data:www-data /var/www/wsgi
+
+# make cam writable so pi can write images to it
+sudo chmod -R 770 /var/www/html/cam
 
