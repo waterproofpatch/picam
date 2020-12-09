@@ -71,12 +71,18 @@ class Images(Resource):
                 LOGGER.info("Capturing image...")
                 camera.resolution = (1024, 768)
                 camera.start_preview()
+
                 # Camera warm-up time
                 time.sleep(2)
+
+                # /var/www/html/cam is writable by 'pi', and nginx
+                # routes the requests for /cam/ to this location.
                 camera.capture("/var/www/html/cam/foo.jpg")
 
                 # store a link to it in the database
                 LOGGER.info("Captured image, updating db...")
+
+                # nginx routes /cam/ requests appropriately
                 image = Image(url="/cam/foo.jpg")
                 db.session.add(image)
                 db.session.commit()
