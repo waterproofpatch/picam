@@ -33,12 +33,12 @@ from backend import jwt, db, flask_app, allowed_file, LOGGER
 PASSWORD_MIN_LEN = 13
 
 
-@flask_app.route("/cam/<path:path>")
-def send_images(path):
-    """
-    Image file resolution for development
-    """
-    return send_from_directory("cam", path)
+# @flask_app.route("/cam/<path:path>")
+# def send_images(path):
+#     """
+#     Image file resolution for development
+#     """
+#     return send_from_directory("cam", path)
 
 
 class Images(Resource):

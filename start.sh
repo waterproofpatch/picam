@@ -2,7 +2,7 @@
 
 # Init the database with test data
 echo "Init database..."
-source ./venv/bin/activate && python -m backend.app --init 
+source ./venv/bin/activate && python -m backend.app --dropall --initonly
 
 # Stop any existing uwsgi server
 echo "Stopping old uwsgi..."

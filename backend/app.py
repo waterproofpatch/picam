@@ -29,26 +29,14 @@ def init_db(db, drop_all=False):
     """
     Initialize the database
     """
-    LOGGER.info("Initializing DB {}".format(db))
+    LOGGER.info(f"Initializing DB {db}")
     db.init_app(flask_app)
+
     if drop_all:
         LOGGER.info("Dropping tables...")
         db.drop_all()
 
-        # for testing
-        image = models.Image(url="cam/test.png")
-        hashed_pw = models.User.generate_hash(
-            plaintext_password="passwordpassword".encode()
-        )
-        user = models.User(
-            email="test@gmail.com", password=base64.b64encode(hashed_pw).decode()
-        )
-
-        db.session.add(image)
-        db.session.add(user)
-
     db.create_all()
-
     db.session.commit()
 
 

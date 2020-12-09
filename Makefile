@@ -19,6 +19,7 @@ build:
 # Deploy to Pi
 deploy: build
 	scp -r $(PI_FILES) $(PI_USER)@$(PI_ADDRESS):$(PI_DIR)
+	ssh -t $(PI_USER)@$(PI_ADDRESS) '(cd workspace && source venv/bin/activate && ./deploy.sh && ./start.sh)'
 
 # Start the wsgi server locally. Useful to verify the uwsgi config is working
 run_uwsgi:

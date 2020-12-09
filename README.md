@@ -27,7 +27,7 @@ python -m backend.app
 
 ## Production
 
-### Deploy to Pi
+### Deploy to Pi (also restarts web services)
 
 ```bash
 make deploy
