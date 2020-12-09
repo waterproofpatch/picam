@@ -6,6 +6,7 @@ import base64
 import bcrypt
 import os
 import uuid
+import time
 
 # flask imports
 from flask import jsonify
@@ -23,14 +24,13 @@ from flask_jwt_extended import (
 )
 from werkzeug.utils import secure_filename
 
-from backend.models import User, Item, File, RevokedTokenModel
+from backend.models import User, Image, RevokedTokenModel
 
 # my imports, from __init__
 from backend import jwt, db, flask_app, allowed_file, LOGGER
 
 # globals
 PASSWORD_MIN_LEN = 13
-MAX_UPLOADS_PER_USER = 20
 
 
 class Images(Resource):
@@ -48,6 +48,28 @@ class Images(Resource):
         """
         Handle a get request for all files
         """
+        return [x.as_json() for x in Image.query.all()]
+
+    def post(self):
+        """
+        Start the camera and take a picture.
+        """
+        print("starting capture...")
+        try:
+            # this import not supported on anything but the Pi
+            from picamera import PiCamera
+
+            with PiCamera() as camera:
+                camera = PiCamera()
+                camera.resolution = (1024, 768)
+                camera.start_preview()
+                # Camera warm-up time
+                time.sleep(2)
+                camera.capture("foo.jpg")
+        except Exception as e:
+            error = e
+            return {"error": e.msg}, 400
+
         return {}
 
 

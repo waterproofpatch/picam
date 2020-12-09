@@ -2,6 +2,7 @@
   <div>
     <h2 v-if="error">Error: {{ error }}</h2>
     <h2 v-if="success">Success: {{ success }}</h2>
+    <button v-on:click="startCapture">Capture</button>
     <div
       v-for="image in images"
       v-bind:key="image.id"
@@ -28,16 +29,31 @@ export default {
     this.getImages();
   },
   methods: {
+    startCapture: function () {
+      this.loading = true;
+      this.error = null;
+      this.axios
+        .post("/api/images")
+        .then((response) => {
+          console.log("Done posting to images API...");
+        })
+        .catch((error) => {
+          console.log(error);
+          this.error = error.response.data.error;
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
     getImages: function () {
       this.loading = true;
+      this.error = null;
       this.axios
         .get("/api/images")
         .then((response) => {
-          console.log("got response " + response.data);
           this.images = response.data;
         })
         .catch((error) => {
-          console.log("error getting images");
           this.images = [];
           this.error = error.response.data.error;
         })

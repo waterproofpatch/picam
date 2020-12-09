@@ -64,7 +64,7 @@ const router = new VueRouter({
 
 // nav guard to prompt user to login
 router.beforeEach((to, from, next) => {
-  if (to.name === "Items" && store.getters.uid === null) {
+  if (to.name === "Images" && store.getters.uid === null) {
     next({ name: "Login" });
   } else {
     next();

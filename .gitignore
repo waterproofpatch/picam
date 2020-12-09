@@ -13,19 +13,14 @@ tags.*
 *.db
 Untitled.code-workspace
 pi-cam.code-workspace
-uploads/**
+images/**
 
 # node stuff
 node_modules
 
 
-# Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
 backend/.pytest_cache/v/cache/lastfailed
 backend/models.py
 backend/.pytest_cache/v/cache/nodeids
 .coverage
 htmlcov
-pi-cam.docker.tar

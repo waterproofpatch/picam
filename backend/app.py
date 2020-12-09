@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Item API backend. This is the main entry point for the app.
+This is the main entry point for the app.
 
 UWSGI: module: app(.py), callable: app
 """
@@ -15,7 +15,7 @@ from flask_restful import Resource, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # my imports, some from __init__
-from backend import flask_app, api, views, db
+from backend import flask_app, api, views, db, models
 from . import LOGGER
 
 api.add_resource(views.Images, "/api/images")
@@ -35,6 +35,10 @@ def init_db(db, drop_all=False):
         LOGGER.info("Dropping tables...")
         db.drop_all()
     db.create_all()
+
+    image = models.Image(url="test.png")
+    db.session.add(image)
+
     db.session.commit()
 
 

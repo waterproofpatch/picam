@@ -4,11 +4,11 @@ import os
 import base64
 
 from backend import flask_app, db, app
-from backend.models import User, Item
+from backend.models import User, Image
 
 from flask_jwt_extended import create_access_token, create_refresh_token
 
-from backend.models import User, Item
+from backend.models import User, Image
 from backend import db
 
 
@@ -64,13 +64,9 @@ def authenticated_client(unauthenticated_client):
 
 
 @pytest.fixture()
-def test_items(authenticated_client, test_users):
-    item_1 = Item(
-        field1="field1_value1", jsonfield1={"key": "value1"}, user=test_users[0]
-    )
-    item_2 = Item(
-        field1="field1_value2", jsonfield1={"key": "value2"}, user=test_users[1]
-    )
+def test_images(authenticated_client, test_users):
+    image_1 = Image(url="image1.jpg")
+    image_2 = Image(url="image2.jpg")
     with authenticated_client.application.app_context():
         db.session.add(item_1)
         db.session.add(item_2)

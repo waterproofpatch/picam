@@ -44,4 +44,4 @@ update:
 
 # remove artifacts
 clean:
-	rm -rf htmlcov .coverage uploads
+	rm -rf htmlcov .coverage images
