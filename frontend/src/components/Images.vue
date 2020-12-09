@@ -2,13 +2,20 @@
   <div>
     <h2 v-if="error">Error: {{ error }}</h2>
     <h2 v-if="success">Success: {{ success }}</h2>
-    <button v-on:click="startCapture">Capture</button>
+
+    <center><button v-on:click="startCapture">Capture</button></center>
+
     <div
       v-for="image in images"
       v-bind:key="image.id"
     >
-      <p>Image URL is {{image.url}}</p>
-      <img v-bind:src=image.url>
+      <p>Image {{image.id}}: {{image.url}}</p>
+      <button v-on:click="deleteCapture(image.id)">Delete</button>
+      <img
+        v-bind:src=image.url
+        width=256px
+        height=256px
+      >
     </div>
   </div>
 </template>
@@ -30,6 +37,23 @@ export default {
     this.getImages();
   },
   methods: {
+    deleteCapture: function (id) {
+      console.log("Deleting " + id);
+      this.loading = true;
+      this.error = null;
+      this.axios
+        .delete("/api/images/" + id)
+        .then((response) => {
+          this.images = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+          this.error = error.response.data.error;
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
     startCapture: function () {
       this.loading = true;
       this.error = null;

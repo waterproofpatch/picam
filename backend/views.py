@@ -95,6 +95,21 @@ class Images(Resource):
         return [x.as_json() for x in Image.query.all()]
 
 
+class _Image(Resource):
+    """
+    Access a single image by its ID
+    """
+
+    def delete(self, id):
+        """
+        Delete an image
+        """
+        LOGGER.debug(f"Delete request for {id}")
+        Image.query.filter_by(id=id).delete()
+        db.session.commit()
+        return [x.as_json() for x in Image.query.all()]
+
+
 class Register(Resource):
     """Registration endpoint
 
