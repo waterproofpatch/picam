@@ -74,12 +74,19 @@ class Images(Resource):
                 # Camera warm-up time
                 time.sleep(2)
                 camera.capture("/var/www/html/cam/foo.jpg")
-                LOGGER.info("Captured image...")
+
+                # store a link to it in the database
+                LOGGER.info("Captured image, updating db...")
+                image = Image(url="/cam/foo.jpg")
+                db.session.add(image)
+                db.session.commit()
+
+                LOGGER.info("Done capturing image...")
         except Exception as e:
             LOGGER.error(e)
             return {"error": "Failed taking picture"}, 400
 
-        return {}
+        return [x.as_json() for x in Image.query.all()]
 
 
 class Register(Resource):

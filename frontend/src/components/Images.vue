@@ -36,7 +36,7 @@ export default {
       this.axios
         .post("/api/images")
         .then((response) => {
-          console.log("Done posting to images API...");
+          this.images = response.data;
         })
         .catch((error) => {
           console.log(error);
