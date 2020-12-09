@@ -3,8 +3,6 @@ import App from "./App.vue";
 import Register from "./components/Register.vue";
 import Login from "./components/Login.vue";
 import Index from "./components/Index.vue";
-import Items from "./components/Items.vue";
-import Item from "./components/Item.vue";
 import Images from "./components/Images.vue";
 
 // fontawesome
@@ -52,16 +50,6 @@ const routes = [
     path: "/",
     component: Index,
     name: "Index",
-  },
-  {
-    path: "/items",
-    component: Items,
-    name: "Items",
-  },
-  {
-    path: "/items/:id",
-    component: Item,
-    name: "Item",
   },
   {
     path: "/images",

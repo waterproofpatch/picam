@@ -33,154 +33,22 @@ PASSWORD_MIN_LEN = 13
 MAX_UPLOADS_PER_USER = 20
 
 
-@flask_app.route("/api/files", methods=["GET", "POST"])
-@jwt_required
-def Files():
-    """Handle upload of file
-
-    Returns:
-        tuple -- response text, status code
+class Images(Resource):
     """
-    if request.method == "GET":
-        current_user = get_jwt_identity()
-        user = User.query.filter_by(email=current_user).first()
-        if request.args.get("id") is not None:
-            return jsonify(
-                [
-                    x.as_json(user.id)
-                    for x in File.query.filter(File.id == request.args.get("id"))
-                ]
-            )
-        return jsonify([x.as_json(user.id) for x in File.query.all()])
-
-    if request.method == "POST":
-
-        # get the file from the request
-        file = request.files["theFile"]
-
-        # make sure this file has a valid extension
-        if not file or not allowed_file(file.filename):
-            LOGGER.error(f"invalid file {file.filename}")
-            return "invalid filename", 400
-
-        # sanitize filename, prepending a uuid
-        filename = str(uuid.uuid4()) + "-" + secure_filename(file.filename)
-
-        # find user performing the upload
-        current_user = get_jwt_identity()
-        user = User.query.filter_by(email=current_user).first()
-        LOGGER.debug(f"file uploaded by user {user.id}")
-
-        # see how many files the user has already uploaded
-        files = File.query.filter_by(user_id=user.id).all()
-        LOGGER.error(f"user has already uploaded {len(files)} files")
-        if len(files) >= MAX_UPLOADS_PER_USER:
-            LOGGER.error(f"user has already uploaded {MAX_UPLOADS_PER_USER}")
-            return "already uploaded max number of allowed files", 400
-
-        # save file to disk
-        LOGGER.debug(f"saving filename {filename}")
-        file.save(os.path.join(flask_app.config["UPLOAD_FOLDER"], filename))
-
-        # add an entry in the database
-        file = File(filename=filename, user=user)
-        db.session.add(file)
-        db.session.commit()
-        return "success", 200
-
-
-class Items(Resource):
-    """Items endpoint
+    Images endpoint
 
     Arguments:
-        Resource {Resource} -- Flask resource
+        Resource {Resource} - Flask resource
 
     Returns:
-        tuple -- {'message'}, status_code
+        tuple - {'message'}, status_code
     """
 
-    @jwt_required
-    def delete(self):
-        """
-        Deleting one of their items
-        """
-        current_user = get_jwt_identity()
-        user = User.query.filter_by(email=current_user).first()
-        item = Item.query.get(request.values["id"])
-        if not item:
-            return {"error": "Item not found."}, 400
-        if user.id != item.user_id:
-            return {"error": "this item does not belong to you"}, 401
-        db.session.delete(item)
-        db.session.commit()
-        return {}, 200
-
-    @jwt_required
     def get(self):
         """
-        Get all items
+        Handle a get request for all files
         """
-        current_user = get_jwt_identity()
-        user = User.query.filter_by(email=current_user).first()
-        if request.args.get("id") is not None:
-            return [
-                x.as_json(user.id)
-                for x in Item.query.filter(Item.id == request.args.get("id"))
-            ]
-        return [x.as_json(user.id) for x in Item.query.all()], 200
-
-    @jwt_required
-    def put(self):
-        """
-        Update an existing item
-        """
-        current_user = get_jwt_identity()
-        user = User.query.filter_by(email=current_user).first()
-        if "field1" not in request.json:
-            return {"error": "missing field1"}, 400
-        if "jsonfield1" not in request.json:
-            return {"error": "missing jsonfield1"}, 400
-        if not request.json["field1"]:
-            return {"error": "field1 must not be 0 length"}, 400
-        if not request.json["jsonfield1"]:
-            return {"error": "jsonfield1 must not be 0 length"}, 400
-        item = Item.query.get(request.values["id"])
-        if user.id != item.user_id:
-            return {"error": "this item does not belong to you"}, 401
-        item.field1 = request.json["field1"]
-        item.jsonfield1 = request.json["jsonfield1"]
-        db.session.commit()
-        return [x.as_json(user.id) for x in Item.query.all()], 200
-
-    @jwt_required
-    def post(self):
-        """
-        Create a new item
-        """
-        current_user = get_jwt_identity()
-        user = User.query.filter_by(email=current_user).first()
-        if (
-            request.content_type is None
-            or "application/json" not in request.content_type.split(";")
-        ):
-            return {"error": "invalid content type"}, 400
-        if "field1" not in request.json:
-            return {"error": "missing field1"}, 400
-        if "jsonfield1" not in request.json:
-            return {"error": "missing jsonfield1"}, 400
-        if not request.json["field1"]:
-            return {"error": "field1 must not be 0 length"}, 400
-        if not request.json["jsonfield1"]:
-            return {"error": "jsonfield1 must not be 0 length"}, 400
-        user = User.query.filter_by(email=get_jwt_identity()).first()
-        item = Item(
-            field1=request.json["field1"],
-            jsonfield1=request.json["jsonfield1"],
-            user=user,
-        )
-        db.session.add(item)
-        db.session.commit()
-        return [x.as_json(user.id) for x in Item.query.all()], 200
+        return {}
 
 
 class Register(Resource):
@@ -297,60 +165,8 @@ class Logout(Resource):
         return resp
 
 
-class Profile(Resource):
-    """Profile endpoint
-
-    Arguments:
-        Resource {Resource} -- Flask resource
-
-    Returns:
-        tuple -- {'message'}, status_code
-    """
-
-    @jwt_required
-    def get(self):
-        """
-        Handle a user getting their profile
-        """
-        user = User.query.filter_by(email=get_raw_jwt()["identity"]).first()
-        return {"email": user.email,}, 200
-
-    # TODO may need fresh token
-    @jwt_required
-    def post(self):
-        """
-        Handle a user changing their information
-        """
-        if "email" not in request.json:
-            return {"error": "Must supply email address"}, 400
-        if "password" not in request.json:
-            return {"error": "Must supply password"}, 400
-
-        user = User.query.filter_by(email=get_raw_jwt()["identity"]).first()
-        if user is None:
-            return {"error": "Email or password incorrect"}, 400
-        if bcrypt.hashpw(
-            request.json["password"].encode(), base64.b64decode(user.password)
-        ) != base64.b64decode(user.password):
-            return {"error": "Email or password incorrect"}, 400
-        if len(request.json["email"]) == 0:
-            return {"error": "Email must be at least one character"}, 400
-
-        if (
-            request.json["email"] != user.email
-            and db.session.query(User.id)
-            .filter_by(email=request.json["email"])
-            .scalar()
-            is not None
-        ):
-            return {"error": "Email is already registered."}, 400
-        user.email = request.json["email"]
-        db.session.commit()
-        return {"uid": user.id, "email": user.email}, 200
-
-
 class TokenRefresh(Resource):
-    """refresh a token 
+    """refresh a token
 
     Arguments:
         Resource {Resource} -- Flask resource
@@ -389,7 +205,7 @@ def TokenCheckBlacklist(decrypted_token):
 
 @jwt.expired_token_loader
 def TokenExpiredCallback(expired_token):
-    """Called when a token is expired 
+    """Called when a token is expired
 
     Arguments:
         Resource {Resource} -- Flask resource

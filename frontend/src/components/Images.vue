@@ -2,25 +2,6 @@
   <div>
     <h2 v-if="error">Error: {{ error }}</h2>
     <h2 v-if="success">Success: {{ success }}</h2>
-    <div class="form-container">
-      <form class="form form-item">
-        <div class="form-field">
-          <input
-            type="file"
-            class="btn"
-            @change="changeFile"
-          />
-        </div>
-        <div class="form-field">
-          <input
-            class="btn"
-            type="submit"
-            value="Add"
-            v-on:click.prevent="uploadFile()"
-          />
-        </div>
-      </form>
-    </div>
     <div
       v-for="image in images"
       v-bind:key="image.id"
@@ -40,23 +21,23 @@ export default {
       file: null,
       images: [],
       error: null,
-      success: null
+      success: null,
     };
   },
   mounted() {
-    this.getFiles();
+    this.getImages();
   },
   methods: {
-    getFiles: function() {
+    getImages: function () {
       this.loading = true;
       this.axios
-        .get("/api/files")
-        .then(response => {
-          console.log("got response " + response);
+        .get("/api/images")
+        .then((response) => {
+          console.log("got response " + response.data);
           this.images = response.data;
         })
-        .catch(error => {
-          console.log("error getting files");
+        .catch((error) => {
+          console.log("error getting images");
           this.images = [];
           this.error = error.response.data.error;
         })
@@ -64,41 +45,7 @@ export default {
           this.loading = false;
         });
     },
-    uploadFile: function() {
-      if (this.file == null) {
-        this.error = "Must select a file";
-        return;
-      }
-      const formData = new FormData();
-      formData.append("theFile", this.file, this.file.name);
-      this.axios
-        .post("/api/files", formData, {
-          onUploadProgress: progressEvent => {
-            console.log(
-              "loaded " +
-                progressEvent.loaded +
-                ", total " +
-                progressEvent.total
-            );
-          }
-        })
-        .then(response => {
-          console.log("done sending file");
-          this.success = "Upload successful.";
-          this.error = null;
-        })
-        .catch(error => {
-          if (error.response.status == 400) {
-            this.error = error.response.data.error;
-            this.success = null;
-          }
-        });
-    },
-    changeFile: function(event) {
-      console.log("setting this file to " + event.target.files[0]);
-      this.file = event.target.files[0];
-    }
-  }
+  },
 };
 </script>
 

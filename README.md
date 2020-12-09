@@ -33,6 +33,14 @@ python -m backend.app
 make deploy
 ```
 
+### Deploy and Start on Pi
+
+```bash
+ssh pi@192.168.1.189:~/workspace
+./deploy.sh
+./start.sh
+```
+
 ### Test UWSGI
 
 ```bash

@@ -18,13 +18,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from backend import flask_app, api, views, db
 from . import LOGGER
 
-api.add_resource(views.Profile, "/api/profile")
+api.add_resource(views.Images, "/api/images")
 api.add_resource(views.Register, "/api/register")
 api.add_resource(views.Login, "/api/login")
 api.add_resource(views.Logout, "/api/logout")
 api.add_resource(views.TokenRefresh, "/api/refresh")
-api.add_resource(views.Items, "/api/items")
-# api.add_resource(views.Files, '/api/files')
 
 
 def init_db(db, drop_all=False):

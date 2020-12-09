@@ -10,9 +10,6 @@
             <router-link to="/">Home</router-link>
           </li>
           <li v-if="$store.state.uid!=null">
-            <router-link to="/items">Items</router-link>
-          </li>
-          <li v-if="$store.state.uid!=null">
             <router-link to="/images">Images</router-link>
           </li>
           <li v-if="$store.state.uid==null">
@@ -56,8 +53,8 @@ export default {
           this.$store.commit("logout");
           console.log("done");
         });
-    }
-  }
+    },
+  },
 };
 </script>
 
