@@ -9,9 +9,6 @@
           <li>
             <router-link to="/">Home</router-link>
           </li>
-          <li v-if="$store.state.uid!=null">
-            <router-link to="/images">Images</router-link>
-          </li>
           <li v-if="$store.state.uid==null">
             <router-link to="/register">Register </router-link>
           </li>
@@ -51,7 +48,7 @@ export default {
         })
         .finally(() => {
           this.$store.commit("logout");
-          console.log("done");
+          this.$router.push({ name: "Login" });
         });
     },
   },

@@ -3,7 +3,6 @@ import App from "./App.vue";
 import Register from "./components/Register.vue";
 import Login from "./components/Login.vue";
 import Index from "./components/Index.vue";
-import Images from "./components/Images.vue";
 
 // fontawesome
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -51,11 +50,6 @@ const routes = [
     component: Index,
     name: "Index",
   },
-  {
-    path: "/images",
-    component: Images,
-    name: "Images",
-  },
 ];
 
 const router = new VueRouter({
@@ -64,7 +58,7 @@ const router = new VueRouter({
 
 // nav guard to prompt user to login
 router.beforeEach((to, from, next) => {
-  if (to.name === "Images" && store.getters.uid === null) {
+  if (to.name === "Index" && store.getters.uid === null) {
     // clear out any browser state that would confuse the user into thinking
     // they were still logged in
     store.commit("logout");
