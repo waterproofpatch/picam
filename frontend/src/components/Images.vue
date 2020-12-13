@@ -5,18 +5,51 @@
 
     <center><button v-on:click="startCapture">Capture</button></center>
 
-    <div
-      v-for="image in images"
-      v-bind:key="image.id"
-    >
-      <p>Image {{image.id}}: {{image.url}}</p>
-      <button v-on:click="deleteCapture(image.id)">Delete</button>
-      <img
-        v-bind:src=image.url
-        width=256px
-        height=256px
+    <center>
+      <div
+        v-if="loading"
+        class="loader"
+      ></div>
+    </center>
+
+    <!-- print a message if no images are availabel -->
+    <p v-if="images.length == 0 && !loading">No captures.</p>
+
+    <!-- show each item -->
+    <section class="cards">
+      <div
+        v-for="image in images"
+        v-bind:key="image.id"
+        v-on:click="$router.push({ path: `${image.url}` })"
+        class="card"
       >
-    </div>
+        <div class="card-header">
+          <div>
+            {{image.id}}
+          </div>
+          <div>
+            <a
+              v-on:click.stop="deleteCapture(image.id)"
+              href="#"
+            >
+              <span style="color: white;">
+                <font-awesome-icon :icon="['fas', 'trash']" />
+              </span>
+            </a>
+          </div>
+        </div>
+        <div class="card-main">
+          <div class="main-description">
+            <img
+              v-bind:src=image.url
+              width=100%
+              height=100%
+            >
+            <!-- {{image.url}} -->
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -27,10 +60,10 @@ export default {
   props: {},
   data() {
     return {
-      file: null,
-      images: [],
+      images: [], // from backend
       error: null,
       success: null,
+      loading: false,
     };
   },
   mounted() {
@@ -92,55 +125,52 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.form-item {
-  width: 450px;
+@media screen and (min-width: 40em) {
+  .card {
+    max-width: calc(75% - 1em);
+  }
+}
+.cards {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  padding-top: 20px;
 }
-.form-item input[type="text"],
-.form-item input[type="password"] {
-  border: 1px solid #888;
+
+.card {
+  width: 250px; /* Set width of cards */
+  height: 250px;
+  display: flex; /* Children use Flexbox */
+  flex-direction: column; /* Rotate Axis */
+  border-radius: 4px; /* Slightly Curve edges */
+  overflow: hidden; /* Fixes the corners */
+  margin: 5px; /* Add space between cards */
+  background: white;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
 }
-.form-item input[type="text"],
-.form-item input[type="password"],
-.form-item input[type="submit"] {
-  border-radius: 0.25rem;
-  padding: 1rem;
-  color: var(--input-border-color);
-  background-color: #ffffff;
-  width: 100%;
+.card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }
-.form-item input[type="text"]:focus,
-.form-item input[type="text"]:hover,
-.form-item input[type="password"]:focus,
-.form-item input[type="password"]:hover {
-  background-color: var(--input-hover-bg-color);
-}
-.form-item input[type="submit"] {
-  background-color: var(--button-bg-color);
+
+.card-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   color: white;
-  font-weight: bold;
-  text-transform: uppercase;
+  font-weight: 600;
+  background-color: #409fbf;
+  padding: 5px 10px;
 }
-.form-item input[type="submit"]:focus,
-.form-item input[type="submit"]:hover {
-  background-color: black;
+
+.card-main {
+  display: flex; /* Children use Flexbox */
+  flex-direction: column; /* Rotate Axis to Vertical */
+  justify-content: center; /* Group Children in Center */
+  align-items: center; /* Group Children in Center (on cross axis) */
 }
-.form-field {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  margin-bottom: 2rem;
-}
-input {
-  border: 0;
-  color: inherit;
-  font: inherit;
-  margin: 0;
-  outline: 0;
-  padding: 0;
-  -webkit-transition: background-color 0.3s;
-  transition: background-color 0.3s;
+
+.main-description {
+  color: black;
+  text-align: center;
 }
 </style>
