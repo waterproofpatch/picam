@@ -3,10 +3,12 @@ Views backend. Handles items, logins, registrations, logouts and tokens.
 """
 # native imports
 import base64
+import shutil
 import bcrypt
 import os
 import uuid
 import time
+import uuid
 
 # flask imports
 from flask import jsonify, send_from_directory
@@ -32,13 +34,67 @@ from backend import jwt, db, flask_app, allowed_file, LOGGER
 # globals
 PASSWORD_MIN_LEN = 13
 
+# path to a test image for use with development
+TEST_SRC_IMAGE_PATH = "test_images/test_image.jpg"
 
-# @flask_app.route("/cam/<path:path>")
-# def send_images(path):
-#     """
-#     Image file resolution for development
-#     """
-#     return send_from_directory("cam", path)
+
+@flask_app.route("/test_images/<path:path>")
+def send_images(path):
+    """
+    Image file resolution for development
+    """
+    LOGGER.debug("sending file")
+    return send_from_directory("../test_images", path)
+
+
+def take_picture():
+    """
+    Take a picture (or return static, if not connected to camera).
+    :return: True if taking a picture was successful.
+    "return: False if taking a picture failed.
+    """
+    img_uuid = uuid.uuid4()
+
+    # debugging without a camera means faking an image capture. Achieve this by
+    # copying a pre-existing image and naming it uniquely.
+    if flask_app.debug:
+        shutil.copyfile(TEST_SRC_IMAGE_PATH, f"test_images/{img_uuid}.jpg")
+        image = Image(url=f"test_images/{img_uuid}.jpg")
+        db.session.add(image)
+        db.session.commit()
+        return True
+
+    # if we're not debugging, try and capture an image from the actual camera.
+    try:
+        # this import not supported on anything but the Pi
+        from picamera import PiCamera
+
+        with PiCamera() as camera:
+            LOGGER.info("Capturing image...")
+            camera.resolution = (1024, 768)
+            camera.start_preview()
+
+            # Camera warm-up time
+            time.sleep(2)
+
+            # /var/www/html/cam is writable by 'pi', and nginx
+            # routes the requests for /cam/ to this location.
+            path = f"/var/www/html/cam/{img_uuid}.jpg"
+            camera.capture(path)
+
+            # store a link to it in the database
+            LOGGER.info(f"Captured image, saved to path {path}, updating db...")
+
+            # nginx routes *.jpg requests appropriately
+            image = Image(url=f"{img_uuid}.jpg")
+            db.session.add(image)
+            db.session.commit()
+
+            LOGGER.info("Done capturing image...")
+            return True
+    except Exception as e:
+        LOGGER.error(e)
+        return False
 
 
 @jwt.token_in_blacklist_loader
@@ -103,34 +159,7 @@ class Images(Resource):
         Start the camera and take a picture.
         """
         print("starting capture...")
-        try:
-            # this import not supported on anything but the Pi
-            from picamera import PiCamera
-
-            with PiCamera() as camera:
-                LOGGER.info("Capturing image...")
-                camera.resolution = (1024, 768)
-                camera.start_preview()
-
-                # Camera warm-up time
-                time.sleep(2)
-
-                # /var/www/html/cam is writable by 'pi', and nginx
-                # routes the requests for /cam/ to this location.
-                path = "/var/www/html/cam/foo.jpg"
-                camera.capture(path)
-
-                # store a link to it in the database
-                LOGGER.info(f"Captured image, saved to path {path}, updating db...")
-
-                # nginx routes /cam/ requests appropriately
-                image = Image(url="foo.jpg")
-                db.session.add(image)
-                db.session.commit()
-
-                LOGGER.info("Done capturing image...")
-        except Exception as e:
-            LOGGER.error(e)
+        if not take_picture():
             return {"error": "Failed taking picture"}, 400
 
         return [x.as_json() for x in Image.query.all()]
@@ -149,9 +178,12 @@ class _Image(Resource):
         LOGGER.debug(f"Delete request for {id}")
 
         # remove from disk
-        path = os.path.join(
-            "/var/www/html/cam/", Image.query.filter_by(id=id).first().url
-        )
+        if flask_app.debug:
+            path = Image.query.filter_by(id=id).first().url
+        else:
+            path = os.path.join(
+                "/var/www/html/cam/", Image.query.filter_by(id=id).first().url
+            )
         LOGGER.debug(f"removing {path}")
         os.remove(path)
 
