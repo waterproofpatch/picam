@@ -47,6 +47,12 @@ sudo adduser pi www-data
 ./start.sh
 ```
 
+Configure crontab to execute the job on reboot:
+
+```bash
+@reboot /home/pi/workspace/deploy.sh && start.sh
+```
+
 ### Test UWSGI
 
 ```bash

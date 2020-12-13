@@ -192,59 +192,6 @@ class _Image(Resource):
         return [x.as_json() for x in Image.query.all()]
 
 
-class Register(Resource):
-    """Registration endpoint
-
-    Arguments:
-        Resource {Resource} -- Flask resource
-
-    Returns:
-        tuple -- {'message'}, status_code
-    """
-
-    def post(self):
-        """
-        Handle a registration request
-        """
-        if "email" not in request.get_json():
-            return {"error": "Must supply email address"}, 400
-        if "password" not in request.get_json():
-            return {"error": "Must supply password"}, 400
-        if "passwordConfirmation" not in request.get_json():
-            return {"error": "Must supply confirmation password"}, 400
-        if request.get_json()["password"] != request.get_json()["passwordConfirmation"]:
-            return {"error": "Passwords don't match"}, 400
-        if len(request.get_json()["password"]) <= PASSWORD_MIN_LEN:
-            return (
-                {"error": "Password must be > {} characters.".format(PASSWORD_MIN_LEN)},
-                400,
-            )
-        user = db.session.query(User.id).filter_by(email=request.get_json()["email"])
-        if user.scalar() is not None:
-            return {"error": "Email is already registered."}, 400
-
-        hashed_pw = User.generate_hash(
-            plaintext_password=request.get_json()["password"].encode()
-        )
-        new_user = User(
-            email=request.get_json()["email"],
-            password=base64.b64encode(hashed_pw).decode(),
-        )
-        db.session.add(new_user)
-        db.session.commit()
-
-        # create tokens
-        access_token = create_access_token(identity=new_user.email)
-        refresh_token = create_refresh_token(identity=new_user.email)
-
-        # response payload has cookies for the token as well as
-        # json payload for metadata so frontend can make use of it
-        resp = jsonify({"uid": new_user.id, "email": new_user.email})
-        set_access_cookies(resp, access_token)
-        set_refresh_cookies(resp, refresh_token)
-        return resp
-
-
 class Login(Resource):
     """Login endpoint
 

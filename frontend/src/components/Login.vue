@@ -1,8 +1,10 @@
 <template>
   <div>
     <h2 v-if="error">Error: {{error}}</h2>
+    <center>
+      <p>Login</p>
+    </center>
     <div class="form-container">
-      <p>test@gmail.com | passwordpassword</p>
       <form class="form form-auth">
         <div class="form-field">
           <input

@@ -6,12 +6,6 @@
       </div>
       <div>
         <ul>
-          <li>
-            <router-link to="/">Home</router-link>
-          </li>
-          <li v-if="$store.state.uid==null">
-            <router-link to="/register">Register </router-link>
-          </li>
           <li v-if="$store.state.uid==null">
             <router-link to="/login">Login</router-link>
           </li>

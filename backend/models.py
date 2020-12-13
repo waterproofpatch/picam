@@ -47,7 +47,9 @@ class User(db.Model):
 
     def __repr__(self):
         """
-        String representation for a user
+        String representation for a user.
+        @note don't include the password hash to prevent compromised logfiles
+        from serving as a password hash dump.
         """
         return "<User {id} email={email}>".format(id=self.id, email=self.email)
 

@@ -20,7 +20,7 @@
       <div
         v-for="image in images"
         v-bind:key="image.id"
-        v-on:click="$router.push({ path: `${image.url}` })"
+        v-on:click="$router.push(image.url)"
         class="card"
       >
         <div class="card-header">
