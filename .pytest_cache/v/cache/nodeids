@@ -1,1 +1,18 @@
-[]
+[
+  "backend/test/test_files.py::test_files_post",
+  "backend/test/test_files.py::test_files_post_invalid_filename",
+  "backend/test/test_items.py::test_get_images",
+  "backend/test/test_items.py::test_get_images_fail_unauthenticated",
+  "backend/test/test_items.py::test_post_images_fail_content_type",
+  "backend/test/test_items.py::test_delete_images_fail_unauthenticated",
+  "backend/test/test_items.py::test_post_images_fail_unauthenticated",
+  "backend/test/test_items.py::test_delete_image_wrong_id",
+  "backend/test/test_items.py::test_delete_images_success",
+  "backend/test/test_login.py::test_post_login_wrong_email",
+  "backend/test/test_login.py::test_post_login_wrong_password",
+  "backend/test/test_login.py::test_post_login_missing_email",
+  "backend/test/test_login.py::test_post_login_missing_password",
+  "backend/test/test_login.py::test_post_login_success",
+  "backend/test/test_login.py::test_post_login_success_shortlived_token",
+  "backend/test/test_template.py::test_template"
+]

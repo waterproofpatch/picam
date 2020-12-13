@@ -1,3 +1,8 @@
 {
-  "": true
+  "backend/test/test_files.py::test_files_post": true,
+  "backend/test/test_files.py::test_files_post_invalid_filename": true,
+  "backend/test/test_items.py::test_delete_image_wrong_id": true,
+  "backend/test/test_items.py::test_delete_images_fail_unauthenticated": true,
+  "backend/test/test_items.py::test_delete_images_success": true,
+  "backend/test/test_items.py::test_post_images_fail_content_type": true
 }

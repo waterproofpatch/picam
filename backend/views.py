@@ -41,6 +41,44 @@ PASSWORD_MIN_LEN = 13
 #     return send_from_directory("cam", path)
 
 
+@jwt.token_in_blacklist_loader
+def TokenCheckBlacklist(decrypted_token):
+    """Check if a token is blacklisted
+
+    Arguments:
+        Resource {Resource} -- Flask resource
+
+    Returns:
+        tuple -- {'message'}, status_code
+    """
+    jti = decrypted_token["jti"]
+    return RevokedTokenModel.is_jti_blacklisted(jti)
+
+
+@jwt.expired_token_loader
+def TokenExpiredCallback(expired_token):
+    """Called when a token is expired
+
+    Arguments:
+        Resource {Resource} -- Flask resource
+
+    Returns:
+        tuple -- {'message'}, status_code
+    """
+    LOGGER.error("expired token!")
+    token_type = expired_token["type"]
+    return (
+        jsonify(
+            {
+                "status": 401,
+                "sub_status": 42,
+                "msg": "The {} token has expired".format(token_type),
+            }
+        ),
+        401,
+    )
+
+
 class Images(Resource):
     """
     Images endpoint
@@ -52,12 +90,14 @@ class Images(Resource):
         tuple - {'message'}, status_code
     """
 
+    @jwt_required
     def get(self):
         """
         Handle a get request for all files
         """
         return [x.as_json() for x in Image.query.all()]
 
+    @jwt_required
     def post(self):
         """
         Start the camera and take a picture.
@@ -77,13 +117,14 @@ class Images(Resource):
 
                 # /var/www/html/cam is writable by 'pi', and nginx
                 # routes the requests for /cam/ to this location.
-                camera.capture("/var/www/html/cam/foo.jpg")
+                path = "/var/www/html/cam/foo.jpg"
+                camera.capture(path)
 
                 # store a link to it in the database
-                LOGGER.info("Captured image, updating db...")
+                LOGGER.info(f"Captured image, saved to path {path}, updating db...")
 
                 # nginx routes /cam/ requests appropriately
-                image = Image(url="/cam/foo.jpg")
+                image = Image(url="foo.jpg")
                 db.session.add(image)
                 db.session.commit()
 
@@ -100,11 +141,20 @@ class _Image(Resource):
     Access a single image by its ID
     """
 
+    @jwt_required
     def delete(self, id):
         """
         Delete an image
         """
         LOGGER.debug(f"Delete request for {id}")
+
+        # remove from disk
+        path = os.path.join(
+            "/var/www/html/cam/", Image.query.filter_by(id=id).first().url
+        )
+        LOGGER.debug(f"removing {path}")
+        os.remove(path)
+
         Image.query.filter_by(id=id).delete()
         db.session.commit()
         return [x.as_json() for x in Image.query.all()]
@@ -246,41 +296,3 @@ class TokenRefresh(Resource):
 
         set_access_cookies(resp, access_token)
         return resp
-
-
-@jwt.token_in_blacklist_loader
-def TokenCheckBlacklist(decrypted_token):
-    """Check if a token is blacklisted
-
-    Arguments:
-        Resource {Resource} -- Flask resource
-
-    Returns:
-        tuple -- {'message'}, status_code
-    """
-    jti = decrypted_token["jti"]
-    return RevokedTokenModel.is_jti_blacklisted(jti)
-
-
-@jwt.expired_token_loader
-def TokenExpiredCallback(expired_token):
-    """Called when a token is expired
-
-    Arguments:
-        Resource {Resource} -- Flask resource
-
-    Returns:
-        tuple -- {'message'}, status_code
-    """
-    LOGGER.error("expired token!")
-    token_type = expired_token["type"]
-    return (
-        jsonify(
-            {
-                "status": 401,
-                "sub_status": 42,
-                "msg": "The {} token has expired".format(token_type),
-            }
-        ),
-        401,
-    )
