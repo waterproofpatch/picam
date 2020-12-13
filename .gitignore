@@ -14,6 +14,8 @@ tags.*
 Untitled.code-workspace
 pi-cam.code-workspace
 images/**
+test_images/*
+!test_images/test_image.jpg
 
 # node stuff
 node_modules
