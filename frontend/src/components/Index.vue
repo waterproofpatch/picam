@@ -20,34 +20,38 @@
       <div
         v-for="image in images"
         v-bind:key="image.id"
-        v-on:click="$router.push(image.url)"
         class="card"
       >
-        <div class="card-header">
-          <div>
-            {{image.id}}
+        <a
+          v-bind:href="image.url"
+          style="display: block;"
+        >
+          <div class="card-header">
+            <div>
+              {{image.id}}
+            </div>
+            <div>
+              <a
+                v-on:click.stop="deleteCapture(image.id)"
+                href="#"
+              >
+                <span style="color: white;">
+                  <font-awesome-icon :icon="['fas', 'trash']" />
+                </span>
+              </a>
+            </div>
           </div>
-          <div>
-            <a
-              v-on:click.stop="deleteCapture(image.id)"
-              href="#"
-            >
-              <span style="color: white;">
-                <font-awesome-icon :icon="['fas', 'trash']" />
-              </span>
-            </a>
+          <div class="card-main">
+            <div class="main-description">
+              <img
+                v-bind:src=image.url
+                width=100%
+                height=100%
+              >
+              <!-- {{image.url}} -->
+            </div>
           </div>
-        </div>
-        <div class="card-main">
-          <div class="main-description">
-            <img
-              v-bind:src=image.url
-              width=100%
-              height=100%
-            >
-            <!-- {{image.url}} -->
-          </div>
-        </div>
+        </a>
       </div>
     </section>
   </div>

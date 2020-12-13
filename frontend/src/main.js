@@ -52,11 +52,18 @@ const router = new VueRouter({
 
 // nav guard to prompt user to login
 router.beforeEach((to, from, next) => {
-  if (to.name === "Index" && store.getters.uid === null) {
+  if (to.name === "Index" && store.uid === null) {
     // clear out any browser state that would confuse the user into thinking
     // they were still logged in
+
+    /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
+    console.warn(
+      "Requested 'Index', but had no uid. Logging out then back in."
+    );
     store.commit("logout");
-    next({ name: "Login" });
+    next({
+      name: "Login",
+    });
   } else {
     next();
   }
