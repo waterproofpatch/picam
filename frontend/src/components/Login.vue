@@ -41,15 +41,7 @@ export default {
       error: null,
       email: "",
       password: "",
-      prevRoute: null
     };
-  },
-  // TODO move this to main
-  beforeRouteEnter(to, from, next) {
-    next(vm => {
-      console.log("beforeRouterEnter: " + from.path);
-      vm.prevRoute = from;
-    });
   },
   mounted() {},
   methods: {
@@ -57,16 +49,16 @@ export default {
       this.axios
         .post("/api/login", {
           email: this.email,
-          password: this.password
+          password: this.password,
         })
-        .then(response => {
+        .then((response) => {
           this.$store.commit("login", {
             uid: response.data.uid,
-            email: response.data.email
+            email: response.data.email,
           });
-          this.$router.push(this.prevRoute);
+          this.$router.push("/");
         })
-        .catch(error => {
+        .catch((error) => {
           if (error.response.status == 400) {
             this.error = error.response.data.error;
           } else if (error.response.status == 401) {
@@ -75,9 +67,9 @@ export default {
             this.error = error.response.status;
           }
         })
-        .finally(response => {});
-    }
-  }
+        .finally((response) => {});
+    },
+  },
 };
 </script>
 

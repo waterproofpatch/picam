@@ -65,6 +65,8 @@ const router = new VueRouter({
 // nav guard to prompt user to login
 router.beforeEach((to, from, next) => {
   if (to.name === "Images" && store.getters.uid === null) {
+    // clear out any browser state that would confuse the user into thinking
+    // they were still logged in
     store.commit("logout");
     next({ name: "Login" });
   } else {
