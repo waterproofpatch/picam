@@ -117,7 +117,11 @@ export default {
         })
         .catch((error) => {
           this.images = [];
-          this.error = error.response.data.error;
+          if (error.response.status == 500) {
+            this.error = "Internal server error.";
+          } else {
+            this.error = error.response.data.error;
+          }
         })
         .finally(() => {
           this.loading = false;
