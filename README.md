@@ -86,3 +86,9 @@ Then look for a device with "Raspberry pi foundation"
 ```bash
 ssh pi@192.168.1.189
 ```
+
+## AWS Beanstalk
+
+See 'picam'.
+
+Following https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create-deploy-python-flask.html
