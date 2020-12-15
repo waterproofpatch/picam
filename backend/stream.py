@@ -28,11 +28,16 @@ PAGE = """\
 </html>
 """
 
+GLOBALS = {"output": None}
+
 
 def get_frame():
-    with output.condition:
-        output.condition.wait()
-        frame = output.frame
+    """
+    Get a single frame from the output.
+    """
+    with GLOBALS["output"].condition:
+        GLOBALS["output"].condition.wait()
+        frame = GLOBALS["output"].frame
 
         # now add timestamp to jpeg
         # Convert to PIL Image
@@ -146,18 +151,39 @@ class StreamingHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
 
-if __name__ == "__main__":
-    print("Starting camera...")
+def camera_thread():
+    print("Starting thread...")
     with picamera.PiCamera(resolution="1296x730", framerate=24) as camera:
-        output = StreamingOutput()
-        camera.start_recording(output, format="mjpeg")
+        GLOBALS["output"] = StreamingOutput()
+        camera.start_recording(GLOBALS["output"], format="mjpeg")
         camera.annotate_foreground = picamera.Color(y=0.2, u=0, v=0)
         camera.annotate_background = picamera.Color(y=0.8, u=0, v=0)
-        try:
-            print(f"Starting server on {LISTEN_PORT}")
-            address = ("", LISTEN_PORT)
-            server = StreamingServer(address, StreamingHandler)
-            server.serve_forever()
-        finally:
-            camera.stop_recording()
-            print("Exiting.")
+
+        print("Camera started...")
+
+        # keep the context alive
+        while True:
+            print("Sleeping for event...")
+            if GLOBALS["sleep_event"].wait(10):
+                camera.stop_recording()
+                print("Exiting thread.")
+                return
+
+
+if __name__ == "__main__":
+    print("Starting camera...")
+    GLOBALS["sleep_event"] = threading.Event()
+
+    t = threading.Thread(target=camera_thread)
+    t.start()
+    try:
+        print(f"Starting server on {LISTEN_PORT}")
+        address = ("", LISTEN_PORT)
+        server = StreamingServer(address, StreamingHandler)
+        server.serve_forever()
+    finally:
+        print("Signalling thread...")
+        GLOBALS["sleep_event"].set()
+        print("Joining thread...")
+        t.join()
+        print("Threads joined. Exiting.")
