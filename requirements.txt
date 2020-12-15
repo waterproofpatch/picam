@@ -10,3 +10,6 @@ pylint-flask-sqlalchemy==0.1.0
 uwsgi==2.0.18
 pytest-flask==1.0.0
 colorlog==4.2.1
+Pillow==8.0.1
+opencv-python==1.19.4
+imutils==0.5.3
