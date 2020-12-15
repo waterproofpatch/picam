@@ -1,5 +1,5 @@
 # standard imports
-from threading import Condition
+import threading
 import io
 import logging
 import socketserver
@@ -27,24 +27,6 @@ PAGE = """\
 </body>
 </html>
 """
-
-
-class StreamingOutput(object):
-    def __init__(self):
-        self.frame = None
-        self.buffer = io.BytesIO()
-        self.condition = Condition()
-
-    def write(self, buf):
-        if buf.startswith(b"\xff\xd8"):
-            # New frame, copy the existing buffer's content and notify all
-            # clients it's available
-            self.buffer.truncate()
-            with self.condition:
-                self.frame = self.buffer.getvalue()
-                self.condition.notify_all()
-            self.buffer.seek(0)
-        return self.buffer.write(buf)
 
 
 def get_frame():
@@ -97,6 +79,29 @@ def get_frame():
     return frame
 
 
+class StreamingOutput(object):
+    def __init__(self):
+        self.frame = None
+        self.buffer = io.BytesIO()
+        self.condition = threading.Condition()
+
+    def write(self, buf):
+        if buf.startswith(b"\xff\xd8"):
+            # New frame, copy the existing buffer's content and notify all
+            # clients it's available
+            self.buffer.truncate()
+            with self.condition:
+                self.frame = self.buffer.getvalue()
+                self.condition.notify_all()
+            self.buffer.seek(0)
+        return self.buffer.write(buf)
+
+
+class StreamingServer(socketserver.ThreadingMixIn, HTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
 class StreamingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
 
@@ -139,11 +144,6 @@ class StreamingHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(404)
             self.end_headers()
-
-
-class StreamingServer(socketserver.ThreadingMixIn, HTTPServer):
-    allow_reuse_address = True
-    daemon_threads = True
 
 
 if __name__ == "__main__":
