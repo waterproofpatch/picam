@@ -92,6 +92,9 @@ def create_app():
 
 
 def shutdown():
+    """
+    TODO shut the camera streaming thread(s) down here.
+    """
     LOGGER.info("Shutting down...")
 
 
