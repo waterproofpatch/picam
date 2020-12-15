@@ -13,6 +13,7 @@ import uuid
 # flask imports
 from flask import jsonify, send_from_directory
 from flask_restful import Resource, request
+from sqlalchemy import desc
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -151,7 +152,7 @@ class Images(Resource):
         """
         Handle a get request for all files
         """
-        return [x.as_json() for x in Image.query.all()]
+        return [x.as_json() for x in Image.query.order_by(desc(Image.id)).all()]
 
     @jwt_required
     def post(self):
@@ -162,7 +163,7 @@ class Images(Resource):
         if not take_picture():
             return {"error": "Failed taking picture"}, 400
 
-        return [x.as_json() for x in Image.query.all()]
+        return [x.as_json() for x in Image.query.order_by(desc(Image.id)).all()]
 
 
 class _Image(Resource):
