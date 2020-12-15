@@ -124,13 +124,21 @@ class StreamingHandler(BaseHTTPRequestHandler):
             self.wfile.write(content)
 
         elif self.path == "/stream.mjpg":
+            headers = {
+                "Age": 0,
+                "Cache-Control": "no-cache, private",
+                "Pragma": "no-cache",
+                "Content-Type": "multipart/x-mixed-replace; boundary=FRAME",
+            }
             self.send_response(200)
-            self.send_header("Age", 0)
-            self.send_header("Cache-Control", "no-cache, private")
-            self.send_header("Pragma", "no-cache")
-            self.send_header(
-                "Content-Type", "multipart/x-mixed-replace; boundary=FRAME"
-            )
+            for header in headers:
+                self.send_header(header, headers[header])
+            # self.send_header("Age", 0)
+            # self.send_header("Cache-Control", "no-cache, private")
+            # self.send_header("Pragma", "no-cache")
+            # self.send_header(
+            #     "Content-Type", "multipart/x-mixed-replace; boundary=FRAME"
+            # )
             self.end_headers()
             try:
                 while True:
@@ -170,20 +178,41 @@ def camera_thread():
                 return
 
 
-if __name__ == "__main__":
+def start_camera_thread():
+    """
+    Start the camera thread.
+    """
     print("Starting camera...")
     GLOBALS["sleep_event"] = threading.Event()
+    GLOBALS["camera_thread"] = threading.Thread(target=camera_thread)
+    GLOBALS["camera_thread"].start()
 
-    t = threading.Thread(target=camera_thread)
-    t.start()
+
+def stop_camera_thread():
+    """
+    Signal and stop the camera thread.
+    """
+    print("Signalling thread...")
+    GLOBALS["sleep_event"].set()
+    print("Joining thread...")
+    GLOBALS["camera_thread"].join()
+    print("Thread joined.")
+
+
+def start_server():
+    """
+    Start the server. Does not return.
+    """
+    address = ("", LISTEN_PORT)
+    server = StreamingServer(address, StreamingHandler)
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    start_camera_thread()
     try:
         print(f"Starting server on {LISTEN_PORT}")
-        address = ("", LISTEN_PORT)
-        server = StreamingServer(address, StreamingHandler)
-        server.serve_forever()
+        start_server()
     finally:
-        print("Signalling thread...")
-        GLOBALS["sleep_event"].set()
-        print("Joining thread...")
-        t.join()
+        stop_camera_thread()
         print("Threads joined. Exiting.")
