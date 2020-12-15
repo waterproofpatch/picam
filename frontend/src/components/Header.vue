@@ -10,6 +10,12 @@
             <router-link to="/login">Login</router-link>
           </li>
           <li v-if="$store.state.uid!=null">
+            <router-link to="/stream">Stream</router-link>
+          </li>
+          <li v-if="$store.state.uid!=null">
+            <router-link to="/">Captures</router-link>
+          </li>
+          <li v-if="$store.state.uid!=null">
             <router-link
               to="/"
               @click.native="doLogout"

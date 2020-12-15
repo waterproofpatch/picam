@@ -2,6 +2,7 @@ import Vue from "vue";
 import App from "./App.vue";
 import Login from "./components/Login.vue";
 import Index from "./components/Index.vue";
+import Stream from "./components/Stream.vue";
 
 // fontawesome
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -38,6 +39,11 @@ const routes = [
     path: "/login",
     component: Login,
     name: "Login",
+  },
+  {
+    path: "/stream",
+    component: Stream,
+    name: "Stream",
   },
   {
     path: "/",

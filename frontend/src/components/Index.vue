@@ -60,7 +60,7 @@
 <script>
 /* eslint-disable */
 export default {
-  name: "Images",
+  name: "Index",
   props: {},
   data() {
     return {
