@@ -136,6 +136,20 @@ def TokenExpiredCallback(expired_token):
     )
 
 
+class Stream(Resource):
+    """
+    Stream endpoint
+    """
+
+    @jwt_required
+    def get(self):
+        import pdb
+
+        pdb.set_trace()
+        print("Got stream")
+        return {}
+
+
 class Images(Resource):
     """
     Images endpoint

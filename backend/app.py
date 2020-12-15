@@ -19,6 +19,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from backend import flask_app, api, views, db, models
 from . import LOGGER
 
+api.add_resource(views.Stream, "/api/stream.mjpg")
 api.add_resource(views.Images, "/api/images")
 api.add_resource(views._Image, "/api/images/<int:id>")
 api.add_resource(views.Login, "/api/login")

@@ -47,8 +47,57 @@ class StreamingOutput(object):
         return self.buffer.write(buf)
 
 
-class StreamingHandler(BaseHTTPRequestHandler):
+def get_frame():
+    with output.condition:
+        output.condition.wait()
+        frame = output.frame
 
+        # now add timestamp to jpeg
+        # Convert to PIL Image
+        cv2.CV_LOAD_IMAGE_COLOR = 1  # set flag to 1 to give colour image
+
+        npframe = np.fromstring(frame, dtype=np.uint8)
+        pil_frame = cv2.imdecode(npframe, cv2.CV_LOAD_IMAGE_COLOR)
+
+        cv2_im_rgb = cv2.cvtColor(pil_frame, cv2.COLOR_BGR2RGB)
+        pil_im = Image.fromarray(cv2_im_rgb)
+
+        draw = ImageDraw.Draw(pil_im)
+
+        # Choose a font
+        font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 25)
+        myText = "Live stream: " + dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Draw the text
+        color = "rgb(255,255,255)"
+
+        # get text size
+        text_size = font.getsize(myText)
+
+        # set button size + 10px margins
+        button_size = (text_size[0] + 20, text_size[1] + 10)
+
+        # create image with correct size and black background
+        button_img = Image.new("RGBA", button_size, "black")
+
+        # button_img.putalpha(128)
+        # put text on button with 10px margins
+        button_draw = ImageDraw.Draw(button_img)
+        button_draw.text((10, 5), myText, fill=color, font=font)
+
+        # put button on source image in position (0, 0)
+        pil_im.paste(button_img, (0, 0))
+        bg_w, bg_h = pil_im.size
+        # WeatherSTEM logo in lower left
+        size = 64
+        # Save the image
+        buf = io.BytesIO()
+        pil_im.save(buf, format="JPEG")
+        frame = buf.getvalue()
+    return frame
+
+
+class StreamingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
 
         if self.path == "/":
@@ -75,58 +124,7 @@ class StreamingHandler(BaseHTTPRequestHandler):
             self.end_headers()
             try:
                 while True:
-                    with output.condition:
-                        output.condition.wait()
-                        frame = output.frame
-
-                        # now add timestamp to jpeg
-                        # Convert to PIL Image
-                        cv2.CV_LOAD_IMAGE_COLOR = (
-                            1  # set flag to 1 to give colour image
-                        )
-
-                        npframe = np.fromstring(frame, dtype=np.uint8)
-                        pil_frame = cv2.imdecode(npframe, cv2.CV_LOAD_IMAGE_COLOR)
-
-                        cv2_im_rgb = cv2.cvtColor(pil_frame, cv2.COLOR_BGR2RGB)
-                        pil_im = Image.fromarray(cv2_im_rgb)
-
-                        draw = ImageDraw.Draw(pil_im)
-
-                        # Choose a font
-                        font = ImageFont.truetype(
-                            "/usr/share/fonts/truetype/freefont/FreeSans.ttf", 25
-                        )
-                        myText = "Live stream: " + dt.datetime.now().strftime(
-                            "%Y-%m-%d %H:%M:%S"
-                        )
-
-                        # Draw the text
-                        color = "rgb(255,255,255)"
-
-                        # get text size
-                        text_size = font.getsize(myText)
-
-                        # set button size + 10px margins
-                        button_size = (text_size[0] + 20, text_size[1] + 10)
-
-                        # create image with correct size and black background
-                        button_img = Image.new("RGBA", button_size, "black")
-
-                        # button_img.putalpha(128)
-                        # put text on button with 10px margins
-                        button_draw = ImageDraw.Draw(button_img)
-                        button_draw.text((10, 5), myText, fill=color, font=font)
-
-                        # put button on source image in position (0, 0)
-                        pil_im.paste(button_img, (0, 0))
-                        bg_w, bg_h = pil_im.size
-                        # WeatherSTEM logo in lower left
-                        size = 64
-                        # Save the image
-                        buf = io.BytesIO()
-                        pil_im.save(buf, format="JPEG")
-                        frame = buf.getvalue()
+                    frame = get_frame()
                     self.wfile.write(b"--FRAME\r\n")
                     self.send_header("Content-Type", "image/jpeg")
                     self.send_header("Content-Length", len(frame))

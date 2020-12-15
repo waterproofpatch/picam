@@ -6,7 +6,7 @@
     Stream:
     <center>
       <img
-        src="stream.mjpg"
+        src="/api/stream.mjpg"
         width="1296"
         height="730"
       />
