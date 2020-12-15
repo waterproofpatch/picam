@@ -91,6 +91,15 @@ def create_app():
     return app
 
 
+def shutdown():
+    LOGGER.info("Shutting down...")
+
+
+import atexit
+
+LOGGER.info("Registering shutdown function...")
+atexit.register(shutdown)
+
 # initialize the app etc
 flask_app = create_app()
 db = create_db(flask_app)
