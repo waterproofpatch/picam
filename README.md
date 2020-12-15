@@ -20,6 +20,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Create SSL certs:
+
+```bash
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
+sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+sudo chmod 700 /etc/ssl/private
+```
+
 Start the app in debug mode for testing
 
 ### Start the backend

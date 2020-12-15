@@ -1,11 +1,12 @@
 # standard imports
 import os
+import json
 from datetime import datetime
 
 # custom imports
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_restful import Api
+from flask_restful import Api, Resource
 
 # EB looks for an 'application' callable by default.
 application = Flask(__name__)
@@ -36,50 +37,54 @@ class Ip(db.Model):
         return payload
 
 
-def get_db_details():
+class Index(Resource):
     """
-    Print some DB details
+    Ip endpoint
     """
-    print(os.environ["RDS_DB_NAME"])
-    print(os.environ["RDS_USERNAME"])
-    # os.environ['RDS_PASSWORD'],
-    print(os.environ["RDS_HOSTNAME"])
-    print(os.environ["RDS_PORT"])
+
+    def get(self):
+        """
+        Get the IP for the pi
+        """
+        print("Got a request for the IP endpoint")
+        return [x.as_json() for x in Ip.query.all()]
+
+    def post(self):
+        print("Setting IP")
+
+        # delete the old entry
+        existing = Ip.query.first()
+        if existing:
+            db.session.delete(existing)
+
+        new_ip = Ip(ip="1.2.3.4")
+        db.session.add(new_ip)
+        db.session.commit()
 
 
-# print a nice greeting.
-def say_hello(username="World"):
-    get_db_details()
-    return payload
+api.add_resource(Index, "/")
 
 
-# some bits of text for the page.
-header_text = """
-    <html>\n<head> <title>EB Flask Test</title> </head>\n<body>"""
-instructions = """
-    <p><em>Hint</em>: This is a RESTful web service! Append a username
-    to the URL (for example: <code>/Thelonious</code>) to say hello to
-    someone specific.</p>\n"""
-home_link = '<p><a href="/">Back</a></p>\n'
-footer_text = "</body>\n</html>"
+def init_db(db, drop_all=False):
+    """
+    Initialize the database.
+    """
+    print(f"Initializing DB {db}")
+    db.init_app(application)
 
-# add a rule for the index page.
-application.add_url_rule(
-    "/", "index", (lambda: header_text + say_hello() + instructions + footer_text)
-)
+    if drop_all:
+        print("Dropping tables...")
+        db.drop_all()
 
-# add a rule when the page is accessed with a name appended to the site
-# URL.
-application.add_url_rule(
-    "/<username>",
-    "hello",
-    (lambda username: header_text + say_hello(username) + home_link + footer_text),
-)
+    db.create_all()
+    db.session.commit()
 
 
 # run the app.
 if __name__ == "__main__":
     # Setting debug to True enables debug output. This line should be
     # removed before deploying a production app.
+    init_db(db, drop_all=True)
+
     application.debug = True
     application.run()
