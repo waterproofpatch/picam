@@ -143,9 +143,6 @@ class Stream(Resource):
 
     @jwt_required
     def get(self):
-        import pdb
-
-        pdb.set_trace()
         print("Got stream")
         return {}
 
