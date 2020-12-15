@@ -10,6 +10,16 @@ Template for setting up a simple RESTful API with authentication and backend mod
 
 ## Development
 
+Install dependencies on Pi:
+
+```bash
+ssh pi@<pi_ip_address>
+cd ~/workspace
+sudo apt-get install libatlas-base-dev
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 Start the app in debug mode for testing
 
 ### Start the backend
