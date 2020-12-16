@@ -35,6 +35,7 @@ class Ip(db.Model):
         payload = {
             "id": self.id,
             "ip": self.ip,
+            # "created_on": self.created_on.strftime("%m/%d/%y %I:%M:%S"),
         }
 
         return payload
@@ -83,7 +84,8 @@ def get_html():
     """
     if Ip.query.first():
         ip = Ip.query.first().as_json()["ip"]
-        return f'<a href="https://{ip}:4443">Camera</a>'
+        last_updated = "Not Implemented"  # ip.as_ison()["last_updated"]
+        return f'<center><div style="font-size: 20px"><a href="https://{ip}:4443">Camera</a><br>Updated on {last_updated}<center>'
     else:
         return "No IP reported."
 
