@@ -120,23 +120,22 @@ def update_ip_thread():
     """
     Update the public website with the IP for this device.
     """
+    last_good_ip = "1.2.3.4"
     while True:
         if GLOBALS["thread_event"].wait(INTERVAL):
             LOGGER.info("Signalled. Tearing down.")
             return
 
         # arbitrary placeholder
-        ip = "0.1.2.3"
         try:
             LOGGER.debug(f"Making post request to... {GET_IP_URL}")
-            # f = requests.request("GET", GET_IP_URL, timeout=3)
             response = requests.get(GET_IP_URL, timeout=3)
             ip = response.text
             if re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip):
                 LOGGER.debug(f"Ip is {ip}")
                 last_good_ip = ip
             else:
-                LOGGER.debug(f"No IP in response.")
+                LOGGER.debug(f"No IP in response, using {last_good_ip}")
                 ip = last_good_ip
         except Exception as e:
             LOGGER.error(f"Error posting to public website: {e}")
@@ -147,6 +146,7 @@ def update_ip_thread():
             LOGGER.error(f"Error posting to public website: {e}")
         finally:
             pass
+
     LOGGER.info("IP update thread exiting...")
 
 
