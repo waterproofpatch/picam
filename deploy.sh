@@ -24,3 +24,5 @@ sudo chown -R www-data:www-data /var/www/wsgi
 # make cam writable so pi can write images to it
 sudo chmod -R 770 /var/www/html/cam
 
+source venv/bin/activate && pip install -r requirements.txt
+

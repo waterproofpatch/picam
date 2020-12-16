@@ -2,6 +2,11 @@
 # native imports
 import os
 import logging
+import requests
+import threading
+import atexit
+from urllib.request import urlopen
+import json
 
 # flask imports
 from flask import Flask
@@ -11,6 +16,13 @@ from flask_jwt_extended import JWTManager
 
 # installed imports
 import colorlog
+
+GET_IP_URL = "http://myip.dnsomatic.com"  # prod
+# GET_IP_URL = "http://127.0.0.1:5002"  # dev
+AWS_URL = "http://flask-env.eba-iwmbbt73.us-east-2.elasticbeanstalk.com/"
+# AWS_URL = "http://127.0.0.1:5001/"  # dev
+GLOBALS = {}
+INTERVAL = 20
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -96,12 +108,59 @@ def shutdown():
     TODO shut the camera streaming thread(s) down here.
     """
     LOGGER.info("Shutting down...")
+    GLOBALS["thread_event"].set()
+    for t in GLOBALS["threads"]:
+        LOGGER.info(f"Waiting on {t} to join...")
+        t.join()
+        LOGGER.info(f"{t} joined")
 
 
-import atexit
+def update_ip_thread():
+    """
+    Update the public website with the IP for this device.
+    """
+    while True:
+        if GLOBALS["thread_event"].wait(INTERVAL):
+            LOGGER.info("Signalled. Tearing down.")
+            return
+
+        ip = "0.1.2.3"
+        try:
+            LOGGER.debug(f"Making post request to... {GET_IP_URL}")
+            f = requests.request("GET", GET_IP_URL, timeout=3)
+            ip = f.text
+            LOGGER.debug(f"Ip is {ip}")
+        except Exception as e:
+            LOGGER.error(f"Error posting to public website: {e}")
+        try:
+            LOGGER.debug(f"Making post request to... {AWS_URL}")
+            requests.post(AWS_URL, json={"ip": ip}, timeout=3)
+        except Exception as e:
+            LOGGER.error(f"Error posting to public website: {e}")
+        finally:
+            pass
+    LOGGER.info("IP update thread exiting...")
+
+
+def start_threads():
+    """
+    Start all threads and create signals
+    """
+    # start all background threads
+    GLOBALS["threads"] = [threading.Thread(target=update_ip_thread)]
+    # create a signal they'll terminate on
+    GLOBALS["thread_event"] = threading.Event()
+
+    for t in GLOBALS["threads"]:
+        LOGGER.info(f"Starting {t}")
+        t.start()
+
 
 LOGGER.info("Registering shutdown function...")
 atexit.register(shutdown)
+
+# start the background threads
+start_threads()
 
 # initialize the app etc
 flask_app = create_app()

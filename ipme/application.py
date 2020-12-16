@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 # custom imports
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource
 
@@ -50,19 +50,17 @@ class Index(Resource):
         return [x.as_json() for x in Ip.query.all()]
 
     def post(self):
-        print("Setting IP")
+        ip = request.get_json()["ip"]
+        print(f"Setting IP to {ip}")
 
         # delete the old entry
         existing = Ip.query.first()
         if existing:
             db.session.delete(existing)
 
-        new_ip = Ip(ip="1.2.3.4")
+        new_ip = Ip(ip=ip)
         db.session.add(new_ip)
         db.session.commit()
-
-
-api.add_resource(Index, "/")
 
 
 def init_db(db, drop_all=False):
@@ -80,11 +78,14 @@ def init_db(db, drop_all=False):
     db.session.commit()
 
 
+api.add_resource(Index, "/")
+init_db(db, drop_all=True)
+
 # run the app.
 if __name__ == "__main__":
     # Setting debug to True enables debug output. This line should be
     # removed before deploying a production app.
-    init_db(db, drop_all=True)
+    # init_db(db, drop_all=True)
 
     application.debug = True
-    application.run()
+    application.run(port=5001)
