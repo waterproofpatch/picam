@@ -100,5 +100,12 @@ if __name__ == "__main__":
         shutdown()
         sys.exit(0)
 
-    LOGGER.info("Running app in debug mode from Flask!")
-    flask_app.run(debug=True)
+    LOGGER.info("Running app in debug mode from Flask")
+    try:
+        flask_app.run(debug=True)
+    except SystemExit:
+        LOGGER.info("Flask app shutting down...")
+        shutdown()
+        sys.exit(
+            3
+        )  # allows werkzeug to continue on to reload, see werkzeug/_reloader.py line 184
