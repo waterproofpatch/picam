@@ -1,5 +1,6 @@
 # standard imports
 import os
+import re
 import json
 from datetime import datetime
 
@@ -13,6 +14,8 @@ application = Flask(__name__)
 
 db = SQLAlchemy(application)
 api = Api(application)
+
+application.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 
 class Ip(db.Model):
@@ -37,7 +40,7 @@ class Ip(db.Model):
         return payload
 
 
-class Index(Resource):
+class IpEndpoint(Resource):
     """
     Ip endpoint
     """
@@ -50,7 +53,17 @@ class Index(Resource):
         return [x.as_json() for x in Ip.query.all()]
 
     def post(self):
+        """
+        Expects a JSON payload formed:
+        {"ip" "1.2.3.4"}
+        """
+        if "ip" not in request.get_json():
+            return {"error": "invalid request"}, 400
+
         ip = request.get_json()["ip"]
+        if not re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip):
+            return {"error": "invalid request"}, 400
+
         print(f"Setting IP to {ip}")
 
         # delete the old entry
@@ -58,9 +71,18 @@ class Index(Resource):
         if existing:
             db.session.delete(existing)
 
-        new_ip = Ip(ip=ip)
-        db.session.add(new_ip)
+        db.session.add(Ip(ip=ip))
         db.session.commit()
+        return {}
+
+
+@application.route("/")
+def get_html():
+    if Ip.query.first():
+        ip = Ip.query.first().as_json()["ip"]
+        return f'<a href="{ip}">Camera</a>'
+    else:
+        return "No IP reported."
 
 
 def init_db(db, drop_all=False):
@@ -78,14 +100,10 @@ def init_db(db, drop_all=False):
     db.session.commit()
 
 
-api.add_resource(Index, "/")
+api.add_resource(IpEndpoint, "/ip")
 init_db(db, drop_all=True)
 
 # run the app.
 if __name__ == "__main__":
-    # Setting debug to True enables debug output. This line should be
-    # removed before deploying a production app.
-    # init_db(db, drop_all=True)
-
     application.debug = True
     application.run(port=5001)
