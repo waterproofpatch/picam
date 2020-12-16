@@ -78,9 +78,12 @@ class IpEndpoint(Resource):
 
 @application.route("/")
 def get_html():
+    """
+    Get an HTML page with a link to the camera.
+    """
     if Ip.query.first():
         ip = Ip.query.first().as_json()["ip"]
-        return f'<a href="{ip}">Camera</a>'
+        return f'<a href="https://{ip}:4443">Camera</a>'
     else:
         return "No IP reported."
 

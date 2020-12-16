@@ -17,7 +17,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # my imports, some from __init__
 from backend import flask_app, api, views, db, models
-from . import LOGGER
+from . import LOGGER, shutdown
 
 api.add_resource(views.Stream, "/api/stream.mjpg")
 api.add_resource(views.Images, "/api/images")
@@ -97,6 +97,7 @@ if __name__ == "__main__":
 
     init_db(db, drop_all=args.dropall)
     if args.initonly:
+        shutdown()
         sys.exit(0)
 
     LOGGER.info("Running app in debug mode from Flask!")
