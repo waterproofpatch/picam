@@ -7,6 +7,7 @@ from datetime import datetime
 
 # third party imports
 import bcrypt
+from pytz import timezone
 
 from backend import db
 
@@ -75,10 +76,12 @@ class Image(db.Model):
         """
         JSON representation of this model
         """
+        _created_on = timezone("US/Eastern").localize(self.created_on)
         payload = {
             "id": self.id,
             # "user_id": self.user.id, # this is sensitive, let's not reveal it
             "url": self.url,
+            "created_on": _created_on.strftime("%m/%d/%y %I:%M:%S EST"),
         }
 
         return payload
