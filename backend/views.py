@@ -201,7 +201,7 @@ class _Image(Resource):
 
         Image.query.filter_by(id=id).delete()
         db.session.commit()
-        return [x.as_json() for x in Image.query.all()]
+        return [x.as_json() for x in Image.query.order_by(desc(Image.id)).all()]
 
 
 class Login(Resource):
