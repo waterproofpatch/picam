@@ -28,7 +28,7 @@
         >
           <div class="card-header">
             <div>
-              {{image.id}}
+              {{image.id}} - {{image.created_on}}
             </div>
             <div>
               <a
@@ -98,6 +98,7 @@ export default {
         .post("/api/images")
         .then((response) => {
           this.images = response.data;
+          console.log(this.images);
         })
         .catch((error) => {
           console.log(error);
