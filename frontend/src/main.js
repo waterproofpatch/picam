@@ -86,16 +86,12 @@ axios.interceptors.response.use(
     // expired token
     if (error.response.status === 401) {
       store.commit("logout");
-      router.push("login");
+      router.push({ name: "Login", params: { reason: 1 } });
     }
     // invalid creds
     if (error.response.status === 403) {
       store.commit("logout");
-      router.push("login");
-    }
-    if (error.response.status === 422) {
-      store.commit("logout");
-      router.push("login");
+      router.push({ name: "Login", params: { reason: 2 } });
     }
     return Promise.reject(error);
   }

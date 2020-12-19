@@ -45,7 +45,14 @@ export default {
       password: "",
     };
   },
-  mounted() {},
+  mounted() {
+    if (this.$route.params.reason === 1) {
+      this.error = "Session expired. Please log in again.";
+    }
+    if (this.$route.params.reason === 2) {
+      this.error = "Invalid email or password. Try again.";
+    }
+  },
   methods: {
     doLogin() {
       this.axios

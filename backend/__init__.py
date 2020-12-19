@@ -86,17 +86,19 @@ def create_app():
         LOGGER.debug("Using SQLite")
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 megs
     app.config["JWT_SECRET_KEY"] = os.environ.get(
         "TEMPLATE_JWT_SECRET_KEY", "changemepls"
     )
     app.config["JWT_BLACKLIST_ENABLED"] = True
     app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
     app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 60 * 15  # 15 minutes
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 5  # 60 * 15  # 15 minutes
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 60 * 60 * 24 * 30  # 30 days
     # TODO change this to True once we test this
     app.config["JWT_COOKIE_CSRF_PROTECT"] = False
+    app.config[
+        "PROPAGATE_EXCEPTIONS"
+    ] = True  # SignatureExpired handling in prod, see https://github.com/vimalloc/flask-jwt-extended/issues/20
 
     # only if we're in prod, then use HTTPS only cookies
     app.config["JWT_COOKIE_SECURE"] = os.environ.get("USE_SECURE_COOKIES", False)
@@ -133,6 +135,9 @@ def update_ip_thread():
             ip = response.text
             if re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip):
                 LOGGER.debug(f"Ip is {ip}")
+                if ip == last_good_ip:
+                    LOGGER.debug("Skipping update, IP is the same as it used to be")
+                    continue
                 last_good_ip = ip
             else:
                 LOGGER.debug(f"No IP in response, using {last_good_ip}")
