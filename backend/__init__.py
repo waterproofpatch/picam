@@ -18,6 +18,8 @@ from flask_jwt_extended import JWTManager
 # installed imports
 import colorlog
 
+from backend import stream
+
 GET_IP_URL = "http://myip.dnsomatic.com"  # prod
 # GET_IP_URL = "http://127.0.0.1:5002"  # dev
 AWS_URL = "http://flask-env.eba-iwmbbt73.us-east-2.elasticbeanstalk.com/ip"
@@ -116,6 +118,7 @@ def shutdown():
         LOGGER.info(f"Waiting on {t} to join...")
         t.join()
         LOGGER.info(f"{t} joined")
+    stream.stop_camera_thread()
 
 
 def update_ip_thread():

@@ -6,12 +6,11 @@ import base64
 import shutil
 import bcrypt
 import os
-import uuid
 import time
 import uuid
 
 # flask imports
-from flask import jsonify, send_from_directory
+from flask import jsonify, send_from_directory, Response
 from flask_restful import Resource, request
 from sqlalchemy import desc
 from flask_jwt_extended import (
@@ -25,18 +24,44 @@ from flask_jwt_extended import (
     set_refresh_cookies,
     unset_jwt_cookies,
 )
-from werkzeug.utils import secure_filename
-
-from backend.models import User, Image, RevokedTokenModel
 
 # my imports, from __init__
-from backend import jwt, db, flask_app, allowed_file, LOGGER
+from backend import jwt, db, flask_app, allowed_file, LOGGER, stream
+from backend.models import User, Image, RevokedTokenModel
 
 # globals
 PASSWORD_MIN_LEN = 13
 
 # path to a test image for use with development
 TEST_SRC_IMAGE_PATH = "test_images/test_image.jpg"
+
+
+def generate_live_stream():
+    # get camera frame
+    LOGGER.info("Starting camera output...")
+    stream.start_camera_thread()
+    LOGGER.info("Camera output started...")
+    try:
+        while True:
+            frame = stream.get_frame()
+            if frame is None:
+                LOGGER.error("Failed getting frame.")
+                stream.stop_camera_thread()
+                return "Error getting stream."
+            yield (
+                b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n\r\n"
+            )
+    finally:
+        LOGGER.info("Stopping camera output...")
+        stream.stop_camera_thread()
+        LOGGER.info("Camera output stopped...")
+
+
+@flask_app.route("/api/stream.mjpg")
+def live_stream():
+    return Response(
+        generate_live_stream(), mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
 
 
 @flask_app.route("/test_images/<path:path>")
@@ -96,17 +121,6 @@ def take_picture():
     except Exception as e:
         LOGGER.error(e)
         return False
-
-
-class Stream(Resource):
-    """
-    Stream endpoint
-    """
-
-    @jwt_required
-    def get(self):
-        LOGGER.info("Got stream")
-        return {}
 
 
 class Images(Resource):

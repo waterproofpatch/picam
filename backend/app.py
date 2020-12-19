@@ -16,10 +16,9 @@ from flask_restful import Resource, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # my imports, some from __init__
-from backend import flask_app, api, views, db, models
+from backend import flask_app, api, views, db, models, stream
 from . import LOGGER, shutdown
 
-api.add_resource(views.Stream, "/api/stream.mjpg")
 api.add_resource(views.Images, "/api/images")
 api.add_resource(views._Image, "/api/images/<int:id>")
 api.add_resource(views.Login, "/api/login")
@@ -97,6 +96,7 @@ if __name__ == "__main__":
 
     init_db(db, drop_all=args.dropall)
     if args.initonly:
+        stream.stop_camera_thread()
         shutdown()
         sys.exit(0)
 
@@ -106,6 +106,7 @@ if __name__ == "__main__":
     except SystemExit:
         LOGGER.info("Flask app shutting down...")
         shutdown()
+        stream.stop_camera_thread()
         sys.exit(
             3
         )  # allows werkzeug to continue on to reload, see werkzeug/_reloader.py line 184

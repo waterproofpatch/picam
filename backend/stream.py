@@ -4,14 +4,17 @@ import io
 import logging
 import socketserver
 import traceback
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # installed imports
-import picamera
 from PIL import ImageFont, ImageDraw, Image
 import cv2
 import numpy as np
 import datetime as dt
+
+# custom imports
+from backend import LOGGER
 
 # listen to this port for connections
 LISTEN_PORT = 4444
@@ -35,6 +38,11 @@ def get_frame():
     """
     Get a single frame from the output.
     """
+    if GLOBALS["output"] is None:
+        LOGGER.error(
+            "GLOBALS output is None, this could mean camera hasn's started output"
+        )
+        return None
     with GLOBALS["output"].condition:
         GLOBALS["output"].condition.wait()
         frame = GLOBALS["output"].frame
@@ -156,21 +164,25 @@ class StreamingHandler(BaseHTTPRequestHandler):
 
 
 def camera_thread():
-    print("Starting thread...")
+    LOGGER.debug("Starting thread...")
+
+    # only available on the pi
+    import picamera
+
     with picamera.PiCamera(resolution="1296x730", framerate=24) as camera:
         GLOBALS["output"] = StreamingOutput()
         camera.start_recording(GLOBALS["output"], format="mjpeg")
         camera.annotate_foreground = picamera.Color(y=0.2, u=0, v=0)
         camera.annotate_background = picamera.Color(y=0.8, u=0, v=0)
 
-        print("Camera started...")
+        LOGGER.debug("Camera started...")
 
         # keep the context alive
         while True:
-            print("Sleeping for event...")
+            LOGGER.debug("Sleeping for event...")
             if GLOBALS["sleep_event"].wait(10):
                 camera.stop_recording()
-                print("Exiting thread.")
+                LOGGER.debug("Exiting thread.")
                 return
 
 
@@ -178,21 +190,25 @@ def start_camera_thread():
     """
     Start the camera thread.
     """
-    print("Starting camera...")
+    LOGGER.debug("Starting camera...")
     GLOBALS["sleep_event"] = threading.Event()
     GLOBALS["camera_thread"] = threading.Thread(target=camera_thread)
     GLOBALS["camera_thread"].start()
+    time.sleep(10)  # camera warm up...
 
 
 def stop_camera_thread():
     """
     Signal and stop the camera thread.
     """
-    print("Signalling thread...")
-    GLOBALS["sleep_event"].set()
-    print("Joining thread...")
-    GLOBALS["camera_thread"].join()
-    print("Thread joined.")
+    if "sleep_event" in GLOBALS:
+        LOGGER.debug("Signalling thread...")
+        GLOBALS["sleep_event"].set()
+    if "camera_thread" in GLOBALS:
+        LOGGER.debug("Joining thread...")
+        GLOBALS["camera_thread"].join()
+        LOGGER.debug("Thread joined.")
+    LOGGER.debug("Camera thread stopped.")
 
 
 def start_server():
@@ -207,8 +223,8 @@ def start_server():
 if __name__ == "__main__":
     start_camera_thread()
     try:
-        print(f"Starting server on {LISTEN_PORT}")
+        LOGGER.debug(f"Starting server on {LISTEN_PORT}")
         start_server()
     finally:
         stop_camera_thread()
-        print("Threads joined. Exiting.")
+        LOGGER.debug("Threads joined. Exiting.")
