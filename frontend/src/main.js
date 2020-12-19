@@ -94,25 +94,33 @@ axios.interceptors.response.use(
        * try and get a new token and replay the request.
        * Await so that we hold the_response until we have legitimate data.
        */
-      await axios.post("/api/refresh").then(async (response) => {
-        store.commit("login", {
-          uid: response.data.uid,
-          email: response.data.email,
-        });
-        console.warn("retrying request");
-        await axios
-          .request(error.config)
-          .then((response) => {
-            console.warn("returning response to caller...");
-            the_response = response;
-          })
-          .catch((error) => {
-            console.error(
-              "Got error trying to replay the request with a refreshed token: " +
-                error
-            );
+      await axios
+        .post("/api/refresh")
+        .then(async (response) => {
+          store.commit("login", {
+            uid: response.data.uid,
+            email: response.data.email,
           });
-      });
+          console.warn("retrying request");
+          await axios
+            .request(error.config)
+            .then((response) => {
+              console.warn("returning response to caller...");
+              the_response = response;
+            })
+            .catch((error) => {
+              console.error(
+                "Got error trying to replay the request with a refreshed token: " +
+                  error
+              );
+            });
+        })
+        .catch(() => {
+          console.error(
+            "got expired token when trying to use the refresh token! should give up."
+          );
+        });
+      console.warn("about to ret");
       return the_response;
 
       // store.commit("logout");
