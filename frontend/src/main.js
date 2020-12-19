@@ -1,3 +1,4 @@
+/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 import Vue from "vue";
 import App from "./App.vue";
 import Login from "./components/Login.vue";
@@ -34,6 +35,7 @@ import VueRouter from "vue-router";
 
 Vue.use(VueRouter);
 
+/* define the frontend routes here */
 const routes = [
   {
     path: "/login",
@@ -52,17 +54,18 @@ const routes = [
   },
 ];
 
+/* instantiate the router */
 const router = new VueRouter({
   routes, // short for `routes: routes`
 });
 
-// nav guard to prompt user to login
+/* nav guard to prompt user to login */
 router.beforeEach((to, from, next) => {
   if (to.name === "Index" && store.uid === null) {
-    // clear out any browser state that would confuse the user into thinking
-    // they were still logged in
+    /* clear out any browser state that would confuse the user into thinking
+     * they were still logged in
+     */
 
-    /* eslint no-console: ["error", { allow: ["warn"] }] */
     console.warn(
       "Requested 'Index', but had no uid. Logging out then back in."
     );
@@ -84,12 +87,9 @@ axios.interceptors.response.use(
   },
   /* async so we can 'await' for axios functions to return */
   async function(error) {
-    // expired token
+    // expired token, we'll try to refresh the token and try again.
     if (error.response.status === 401) {
       var the_response = null;
-      /* eslint no-console: ["error", { allow: ["warn"] }] */
-      console.warn(error.config);
-
       /*
        * try and get a new token and replay the request.
        * Await so that we hold the_response until we have legitimate data.
@@ -100,10 +100,18 @@ axios.interceptors.response.use(
           email: response.data.email,
         });
         console.warn("retrying request");
-        await axios.request(error.config).then((response) => {
-          console.warn("returning response to caller...");
-          the_response = response;
-        });
+        await axios
+          .request(error.config)
+          .then((response) => {
+            console.warn("returning response to caller...");
+            the_response = response;
+          })
+          .catch((error) => {
+            console.error(
+              "Got error trying to replay the request with a refreshed token: " +
+                error
+            );
+          });
       });
       return the_response;
 
