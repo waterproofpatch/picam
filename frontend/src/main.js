@@ -62,7 +62,7 @@ router.beforeEach((to, from, next) => {
     // clear out any browser state that would confuse the user into thinking
     // they were still logged in
 
-    /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
+    /* eslint no-console: ["error", { allow: ["warn"] }] */
     console.warn(
       "Requested 'Index', but had no uid. Logging out then back in."
     );
@@ -79,14 +79,31 @@ router.beforeEach((to, from, next) => {
 // Add a response interceptor
 axios.interceptors.response.use(
   function(response) {
-    // Do something with response data
+    // Return response back to axios user (caller).
     return response;
   },
-  function(error) {
+  async function(error) {
     // expired token
     if (error.response.status === 401) {
-      store.commit("logout");
-      router.push({ name: "Login", params: { reason: 1 } });
+      var the_response = null;
+      /* eslint no-console: ["error", { allow: ["warn"] }] */
+      console.warn(error.config);
+      /* try and get a new token and replay the request */
+      await axios.post("/api/refresh").then(async (response) => {
+        store.commit("login", {
+          uid: response.data.uid,
+          email: response.data.email,
+        });
+        console.warn("retrying request");
+        await axios.request(error.config).then((response) => {
+          console.warn("returning response to caller...");
+          the_response = response;
+        });
+      });
+      return the_response;
+
+      // store.commit("logout");
+      // router.push({ name: "Login", params: { reason: 1 } });
     }
     // invalid creds
     if (error.response.status === 403) {

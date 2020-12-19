@@ -279,14 +279,7 @@ def TokenExpiredCallback(expired_token):
         tuple -- {'message'}, status_code
     """
     LOGGER.error("expired token!")
-    token_type = expired_token["type"]
     return (
-        jsonify(
-            {
-                "status": 401,
-                "sub_status": 42,
-                "msg": "The {} token has expired".format(token_type),
-            }
-        ),
+        jsonify({}),
         401,
     )
