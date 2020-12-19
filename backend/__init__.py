@@ -92,8 +92,8 @@ def create_app():
     app.config["JWT_BLACKLIST_ENABLED"] = True
     app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
     app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 5  # 60 * 15  # 15 minutes
-    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 10  # 60 * 60 * 24 * 30  # 30 days
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 60 * 15  # 15 minutes
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 60 * 60 * 24 * 30  # 30 days
     # TODO change this to True once we test this
     app.config["JWT_COOKIE_CSRF_PROTECT"] = False
     app.config[
