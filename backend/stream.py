@@ -14,7 +14,7 @@ import numpy as np
 import datetime as dt
 
 # listen to this port for connections
-LISTEN_PORT = 4443
+LISTEN_PORT = 4444
 
 PAGE = """\
 <html>
@@ -131,14 +131,10 @@ class StreamingHandler(BaseHTTPRequestHandler):
                 "Content-Type": "multipart/x-mixed-replace; boundary=FRAME",
             }
             self.send_response(200)
+
             for header in headers:
                 self.send_header(header, headers[header])
-            # self.send_header("Age", 0)
-            # self.send_header("Cache-Control", "no-cache, private")
-            # self.send_header("Pragma", "no-cache")
-            # self.send_header(
-            #     "Content-Type", "multipart/x-mixed-replace; boundary=FRAME"
-            # )
+
             self.end_headers()
             try:
                 while True:
