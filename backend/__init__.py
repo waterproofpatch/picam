@@ -154,8 +154,8 @@ def update_ip_thread():
                     continue
                 last_good_ip = ip
             else:
-                LOGGER.debug(f"No IP in response, using {last_good_ip}")
-                ip = last_good_ip
+                LOGGER.debug(f"No IP in response, will try later...")
+                continue
         except Exception as e:
             LOGGER.error(f"Error posting to public website: {e}")
         try:
@@ -184,7 +184,7 @@ def start_threads():
         t.start()
 
 
-LOGGER.info("Registering shutdown function...")
+LOGGER.info("Backend web service registering shutdown function...")
 atexit.register(shutdown)
 
 # start the background threads

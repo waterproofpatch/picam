@@ -2,10 +2,8 @@
 import threading
 import io
 import logging
-import socketserver
 import traceback
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # installed imports
 import colorlog
@@ -24,33 +22,19 @@ LOGGER = colorlog.getLogger(__name__)
 LOGGER.addHandler(HANDLER)
 LOGGER.setLevel(logging.DEBUG)
 
-# listen to this port for connections
-LISTEN_PORT = 4444
-
-PAGE = """\
-<html>
-<head>
-<title>MJPEG streaming</title>
-</head>
-<body>
-<h1>Stream</h1>
-<img src="stream.mjpg" width="1296" height="730" />
-</body>
-</html>
-"""
-
-GLOBALS = {"output": None}
+GLOBALS = {"output": None, "camera_started": False}
 
 
 def get_frame():
     """
     Get a single frame from the output.
+
+    :return: None if camera is not started.
     """
-    if GLOBALS["output"] is None:
-        LOGGER.error(
-            "GLOBALS output is None, this could mean camera hasn's started output"
-        )
+    if GLOBALS["camera_started"] == False:
+        LOGGER.error("Tried getting a frame before the was started.")
         return None
+
     with GLOBALS["output"].condition:
         GLOBALS["output"].condition.wait()
         frame = GLOBALS["output"].frame
@@ -118,59 +102,6 @@ class StreamingOutput(object):
         return self.buffer.write(buf)
 
 
-class StreamingServer(socketserver.ThreadingMixIn, HTTPServer):
-    allow_reuse_address = True
-    daemon_threads = True
-
-
-class StreamingHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-
-        if self.path == "/":
-            self.send_response(301)
-            self.send_header("Location", "/index.html")
-            self.end_headers()
-
-        elif self.path == "/index.html":
-            content = PAGE.encode("utf-8")
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html")
-            self.send_header("Content-Length", len(content))
-            self.end_headers()
-            self.wfile.write(content)
-
-        elif self.path == "/stream.mjpg":
-            headers = {
-                "Age": 0,
-                "Cache-Control": "no-cache, private",
-                "Pragma": "no-cache",
-                "Content-Type": "multipart/x-mixed-replace; boundary=FRAME",
-            }
-            self.send_response(200)
-
-            for header in headers:
-                self.send_header(header, headers[header])
-
-            self.end_headers()
-            try:
-                while True:
-                    frame = get_frame()
-                    self.wfile.write(b"--FRAME\r\n")
-                    self.send_header("Content-Type", "image/jpeg")
-                    self.send_header("Content-Length", len(frame))
-                    self.end_headers()
-                    self.wfile.write(frame)
-                    self.wfile.write(b"\r\n")
-            except Exception as e:
-                traceback.print_exc()
-                logging.warning(
-                    "Removed streaming client %s: %s", self.client_address, str(e)
-                )
-        else:
-            self.send_error(404)
-            self.end_headers()
-
-
 def camera_thread():
     LOGGER.debug("Starting thread...")
 
@@ -203,6 +134,7 @@ def start_camera_thread():
     GLOBALS["camera_thread"] = threading.Thread(target=camera_thread)
     GLOBALS["camera_thread"].start()
     time.sleep(10)  # camera warm up...
+    GLOBALS["camera_started"] = True
 
 
 def stop_camera_thread():
@@ -217,22 +149,10 @@ def stop_camera_thread():
         GLOBALS["camera_thread"].join()
         LOGGER.debug("Thread joined.")
     LOGGER.debug("Camera thread stopped.")
+    GLOBALS["camera_started"] = False
 
 
-def start_server():
-    """
-    Start the server. Does not return.
-    """
-    address = ("", LISTEN_PORT)
-    server = StreamingServer(address, StreamingHandler)
-    server.serve_forever()
+LOGGER.info("Streamer registering shutdown function...")
+import atexit
 
-
-if __name__ == "__main__":
-    start_camera_thread()
-    try:
-        LOGGER.debug(f"Starting server on {LISTEN_PORT}")
-        start_server()
-    finally:
-        stop_camera_thread()
-        LOGGER.debug("Threads joined. Exiting.")
+atexit.register(stop_camera_thread)
