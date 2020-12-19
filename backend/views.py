@@ -26,7 +26,7 @@ from flask_jwt_extended import (
 )
 
 # my imports, from __init__
-from backend import jwt, db, flask_app, allowed_file, LOGGER, stream
+from backend import jwt, db, flask_app, allowed_file, stream, LOGGER
 from backend.models import User, Image, RevokedTokenModel
 
 # globals

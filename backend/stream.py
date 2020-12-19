@@ -8,13 +8,21 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # installed imports
+import colorlog
 from PIL import ImageFont, ImageDraw, Image
 import cv2
 import numpy as np
 import datetime as dt
 
-# custom imports
-from backend import LOGGER
+HANDLER = colorlog.StreamHandler()
+HANDLER.setFormatter(
+    colorlog.ColoredFormatter(
+        "%(log_color)s%(levelname)s:%(filename)s:%(lineno)s:%(message)s"
+    )
+)
+LOGGER = colorlog.getLogger(__name__)
+LOGGER.addHandler(HANDLER)
+LOGGER.setLevel(logging.DEBUG)
 
 # listen to this port for connections
 LISTEN_PORT = 4444

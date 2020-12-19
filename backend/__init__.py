@@ -8,6 +8,7 @@ import threading
 import atexit
 from urllib.request import urlopen
 import json
+import time
 
 # flask imports
 from flask import Flask
@@ -25,7 +26,8 @@ GET_IP_URL = "http://myip.dnsomatic.com"  # prod
 AWS_URL = "http://flask-env.eba-iwmbbt73.us-east-2.elasticbeanstalk.com/ip"
 # AWS_URL = "http://127.0.0.1:5001/"  # dev
 GLOBALS = {}
-INTERVAL = 20
+INTERVAL = 5
+IP_UPDATE_DELAY = 20
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -118,6 +120,8 @@ def shutdown():
         LOGGER.info(f"Waiting on {t} to join...")
         t.join()
         LOGGER.info(f"{t} joined")
+
+    # stop the camera thread
     stream.stop_camera_thread()
 
 
@@ -126,13 +130,20 @@ def update_ip_thread():
     Update the public website with the IP for this device.
     """
     last_good_ip = "1.2.3.4"
+    last_send = time.time()
     while True:
         if GLOBALS["thread_event"].wait(INTERVAL):
             LOGGER.info("Signalled. Tearing down.")
             return
 
+        # throttle the IP updates
+        if time.time() - last_send < IP_UPDATE_DELAY:
+            LOGGER.info(f"Waiting {IP_UPDATE_DELAY} seconds before updating IP...")
+            continue
+
         # arbitrary placeholder
         try:
+            last_send = time.time()
             LOGGER.debug(f"Making post request to... {GET_IP_URL}")
             response = requests.get(GET_IP_URL, timeout=3)
             ip = response.text

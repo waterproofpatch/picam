@@ -105,8 +105,8 @@ if __name__ == "__main__":
         flask_app.run(debug=True)
     except SystemExit:
         LOGGER.info("Flask app shutting down...")
-        shutdown()
         stream.stop_camera_thread()
+        shutdown()
         sys.exit(
             3
         )  # allows werkzeug to continue on to reload, see werkzeug/_reloader.py line 184
