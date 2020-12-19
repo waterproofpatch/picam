@@ -82,13 +82,18 @@ axios.interceptors.response.use(
     // Return response back to axios user (caller).
     return response;
   },
+  /* async so we can 'await' for axios functions to return */
   async function(error) {
     // expired token
     if (error.response.status === 401) {
       var the_response = null;
       /* eslint no-console: ["error", { allow: ["warn"] }] */
       console.warn(error.config);
-      /* try and get a new token and replay the request */
+
+      /*
+       * try and get a new token and replay the request.
+       * Await so that we hold the_response until we have legitimate data.
+       */
       await axios.post("/api/refresh").then(async (response) => {
         store.commit("login", {
           uid: response.data.uid,
