@@ -47,6 +47,7 @@ export default {
   },
   mounted() {
     if (this.$route.params.reason === 1) {
+      // try and refresh our token, and try again
       this.error = "Session expired. Please log in again.";
     }
     if (this.$route.params.reason === 2) {

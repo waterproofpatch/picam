@@ -98,44 +98,6 @@ def take_picture():
         return False
 
 
-@jwt.token_in_blacklist_loader
-def TokenCheckBlacklist(decrypted_token):
-    """Check if a token is blacklisted
-
-    Arguments:
-        Resource {Resource} -- Flask resource
-
-    Returns:
-        tuple -- {'message'}, status_code
-    """
-    jti = decrypted_token["jti"]
-    return RevokedTokenModel.is_jti_blacklisted(jti)
-
-
-@jwt.expired_token_loader
-def TokenExpiredCallback(expired_token):
-    """Called when a token is expired
-
-    Arguments:
-        Resource {Resource} -- Flask resource
-
-    Returns:
-        tuple -- {'message'}, status_code
-    """
-    LOGGER.error("expired token!")
-    token_type = expired_token["type"]
-    return (
-        jsonify(
-            {
-                "status": 401,
-                "sub_status": 42,
-                "msg": "The {} token has expired".format(token_type),
-            }
-        ),
-        401,
-    )
-
-
 class Stream(Resource):
     """
     Stream endpoint
@@ -143,7 +105,7 @@ class Stream(Resource):
 
     @jwt_required
     def get(self):
-        print("Got stream")
+        LOGGER.info("Got stream")
         return {}
 
 
@@ -170,7 +132,7 @@ class Images(Resource):
         """
         Start the camera and take a picture.
         """
-        print("starting capture...")
+        LOGGER.debug("starting capture...")
         if not take_picture():
             return {"error": "Failed taking picture"}, 400
 
@@ -234,8 +196,12 @@ class Login(Resource):
         # response payload has cookies for the token as well as
         # json payload for metadata so frontend can make use of it
         resp = jsonify({"uid": user.id, "email": user.email})
-        access_token = create_access_token(identity=user.email)
-        refresh_token = create_refresh_token(identity=user.email)
+        access_token = create_access_token(
+            identity={"email": user.email, "uid": user.id}
+        )
+        refresh_token = create_refresh_token(
+            identity={"email": user.email, "uid": user.id}
+        )
 
         set_access_cookies(resp, access_token)
         set_refresh_cookies(resp, refresh_token)
@@ -260,7 +226,7 @@ class Logout(Resource):
         jti = get_raw_jwt()["jti"]
         revoked_token = RevokedTokenModel(jti=jti)
         revoked_token.add()
-        resp = jsonify({"id": None})
+        resp = jsonify({"uid": None})
         unset_jwt_cookies(resp)
         return resp
 
@@ -280,10 +246,47 @@ class TokenRefresh(Resource):
         """
         Handle request for new access token
         """
+        LOGGER.debug("Getting new non-fresh access token")
         current_user = get_jwt_identity()
-        access_token = create_access_token(identity=current_user)
-        # TODO id n/a?
-        resp = jsonify({"id": "n/a"})
-
+        access_token = create_access_token(identity=current_user, fresh=False)
+        resp = jsonify({"uid": current_user["uid"], "email": current_user["email"]})
         set_access_cookies(resp, access_token)
         return resp
+
+
+@jwt.token_in_blacklist_loader
+def TokenCheckBlacklist(decrypted_token):
+    """Check if a token is blacklisted
+
+    Arguments:
+        Resource {Resource} -- Flask resource
+
+    Returns:
+        tuple -- {'message'}, status_code
+    """
+    jti = decrypted_token["jti"]
+    return RevokedTokenModel.is_jti_blacklisted(jti)
+
+
+@jwt.expired_token_loader
+def TokenExpiredCallback(expired_token):
+    """Called when a token is expired
+
+    Arguments:
+        Resource {Resource} -- Flask resource
+
+    Returns:
+        tuple -- {'message'}, status_code
+    """
+    LOGGER.error("expired token!")
+    token_type = expired_token["type"]
+    return (
+        jsonify(
+            {
+                "status": 401,
+                "sub_status": 42,
+                "msg": "The {} token has expired".format(token_type),
+            }
+        ),
+        401,
+    )
