@@ -52,35 +52,41 @@ def get_frame():
         draw = ImageDraw.Draw(pil_im)
 
         # Choose a font
-        font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 25)
-        myText = "Live stream: " + dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            font_file = "/usr/share/fonts/truetype/freefont/FreeSans.ttf"
+            font = ImageFont.truetype(font_file, 25)
+            myText = "Live stream: " + dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Draw the text
-        color = "rgb(255,255,255)"
+            # Draw the text
+            color = "rgb(255,255,255)"
 
-        # get text size
-        text_size = font.getsize(myText)
+            # get text size
+            text_size = font.getsize(myText)
 
-        # set button size + 10px margins
-        button_size = (text_size[0] + 20, text_size[1] + 10)
+            # set button size + 10px margins
+            button_size = (text_size[0] + 20, text_size[1] + 10)
 
-        # create image with correct size and black background
-        button_img = Image.new("RGBA", button_size, "black")
+            # create image with correct size and black background
+            button_img = Image.new("RGBA", button_size, "black")
 
-        # button_img.putalpha(128)
-        # put text on button with 10px margins
-        button_draw = ImageDraw.Draw(button_img)
-        button_draw.text((10, 5), myText, fill=color, font=font)
+            # button_img.putalpha(128)
+            # put text on button with 10px margins
+            button_draw = ImageDraw.Draw(button_img)
+            button_draw.text((10, 5), myText, fill=color, font=font)
 
-        # put button on source image in position (0, 0)
-        pil_im.paste(button_img, (0, 0))
-        bg_w, bg_h = pil_im.size
-        # WeatherSTEM logo in lower left
-        size = 64
+            # put button on source image in position (0, 0)
+            pil_im.paste(button_img, (0, 0))
+            bg_w, bg_h = pil_im.size
+            # WeatherSTEM logo in lower left
+            size = 64
+        except OSError as e:
+            LOGGER.error(f"Failed opening fot resource {font_file}")
+
         # Save the image
         buf = io.BytesIO()
         pil_im.save(buf, format="JPEG")
         frame = buf.getvalue()
+
     return frame
 
 
@@ -106,15 +112,55 @@ def camera_thread():
     LOGGER.debug("Starting thread...")
 
     # only available on the pi
-    import picamera
+    try:
+        import picamera
 
-    with picamera.PiCamera(resolution="1296x730", framerate=24) as camera:
+        with picamera.PiCamera(resolution="1296x730", framerate=24) as camera:
+            GLOBALS["output"] = StreamingOutput()
+            camera.start_recording(GLOBALS["output"], format="mjpeg")
+            camera.annotate_foreground = picamera.Color(y=0.2, u=0, v=0)
+            camera.annotate_background = picamera.Color(y=0.8, u=0, v=0)
+
+            LOGGER.debug("Camera started...")
+    except ModuleNotFoundError:
+        LOGGER.debug("Not running on device, can't import model")
+
+        class FakeCamera:
+            def __init__(self):
+                self.t = threading.Thread(target=self.record_loop)
+                self.do_record = False
+                self.output = None
+
+            def record_loop(self):
+                LOGGER.debug("Starting record loop...")
+                while self.do_record:
+                    time.sleep(1)  # wait a bit between each frame
+                    LOGGER.debug("fake camera sending frame...")
+                    if self.output == None:
+                        LOGGER.error("Fake camera output is None...")
+                        continue
+
+                    # write a fake frame
+                    self.output.write(open("test_images/test_frame_1.jpg", "rb").read())
+
+                LOGGER.debug("Ending record loop.")
+
+            def stop_recording(self):
+                LOGGER.debug("Fake camera stopped recording...")
+                self.do_record = False
+                LOGGER.debug("Waiting for fake camera to shut down...")
+                self.t.join()
+                LOGGER.debug("Fake camera shut down.")
+
+            def start_recording(self, output):
+                LOGGER.debug("Fake camera starting...")
+                self.output = output
+                self.do_record = True
+                self.t.start()
+
+        camera = FakeCamera()
         GLOBALS["output"] = StreamingOutput()
-        camera.start_recording(GLOBALS["output"], format="mjpeg")
-        camera.annotate_foreground = picamera.Color(y=0.2, u=0, v=0)
-        camera.annotate_background = picamera.Color(y=0.8, u=0, v=0)
-
-        LOGGER.debug("Camera started...")
+        camera.start_recording(GLOBALS["output"])
 
         # keep the context alive
         while True:
