@@ -133,15 +133,29 @@ def camera_thread():
 
             def record_loop(self):
                 LOGGER.debug("Starting record loop...")
+                last_index = 1
+
                 while self.do_record:
-                    time.sleep(1)  # wait a bit between each frame
+
+                    # wait a bit between each frame
+                    time.sleep(1)
+
                     LOGGER.debug("fake camera sending frame...")
                     if self.output == None:
                         LOGGER.error("Fake camera output is None...")
                         continue
 
                     # write a fake frame
-                    self.output.write(open("test_images/test_frame_1.jpg", "rb").read())
+                    if last_index == 1:
+                        last_index = 2
+                        self.output.write(
+                            open("test_images/test_frame_2.jpg", "rb").read()
+                        )
+                    else:
+                        last_index = 1
+                        self.output.write(
+                            open("test_images/test_frame_1.jpg", "rb").read()
+                        )
 
                 LOGGER.debug("Ending record loop.")
 
