@@ -39,21 +39,22 @@ TEST_SRC_IMAGE_PATH = "test_images/test_image.jpg"
 def generate_live_stream():
     # get camera frame
     LOGGER.info("Starting camera output...")
-    stream.start_camera_thread()
+    camera = stream.Camera()
+    camera.start()
     LOGGER.info("Camera output started...")
     try:
         while True:
-            frame = stream.get_frame()
+            frame = camera.get_frame()
             if frame is None:
                 LOGGER.error("Failed getting frame.")
-                stream.stop_camera_thread()
+                camera.stop()
                 return "Error getting stream."
             yield (
                 b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n\r\n"
             )
     finally:
         LOGGER.info("Stopping camera output...")
-        stream.stop_camera_thread()
+        camera.stop()
         LOGGER.info("Camera output stopped...")
 
 

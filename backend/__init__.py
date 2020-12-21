@@ -35,8 +35,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 HANDLER = colorlog.StreamHandler()
 HANDLER.setFormatter(
     colorlog.ColoredFormatter(
-        "%(log_color)s%(levelname)s:%(filename)s:%(lineno)s:%(message)s"
-    )
+        "%(asctime)s:%(log_color)s%(levelname)s:%(filename)s:%(lineno)s:%(message)s"
+    ),
 )
 
 LOGGER = colorlog.getLogger(__name__)
@@ -120,9 +120,6 @@ def shutdown():
         LOGGER.info(f"Waiting on {t} to join...")
         t.join()
         LOGGER.info(f"{t} joined")
-
-    # stop the camera thread
-    stream.stop_camera_thread()
 
 
 def update_ip_thread():

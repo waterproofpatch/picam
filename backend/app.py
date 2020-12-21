@@ -96,7 +96,6 @@ if __name__ == "__main__":
 
     init_db(db, drop_all=args.dropall)
     if args.initonly:
-        stream.stop_camera_thread()
         shutdown()
         sys.exit(0)
 
@@ -105,7 +104,6 @@ if __name__ == "__main__":
         flask_app.run(debug=True)
     except SystemExit:
         LOGGER.info("Flask app shutting down...")
-        stream.stop_camera_thread()
         shutdown()
         sys.exit(
             3
