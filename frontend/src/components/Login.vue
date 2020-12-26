@@ -22,6 +22,14 @@
         </div>
         <div class="form-field">
           <input
+            v-if="logging_in"
+            class="btn"
+            type="submit"
+            value="Processing..."
+            v-on:click.prevent="doLogin"
+          >
+          <input
+            v-else
             class="btn"
             type="submit"
             value="Login"
@@ -40,6 +48,7 @@ export default {
   props: {},
   data() {
     return {
+      logging_in: false,
       error: null,
       email: "",
       password: "",
@@ -56,6 +65,7 @@ export default {
   },
   methods: {
     doLogin() {
+      this.logging_in = true;
       this.axios
         .post("/api/login", {
           email: this.email,
@@ -77,7 +87,9 @@ export default {
             this.error = error.response.status;
           }
         })
-        .finally((response) => {});
+        .finally((response) => {
+          this.logging_in = false;
+        });
     },
   },
 };
