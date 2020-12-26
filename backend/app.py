@@ -100,10 +100,17 @@ if __name__ == "__main__":
         sys.exit(0)
 
     LOGGER.info("Running app in debug mode from Flask")
+
     try:
-        flask_app.run(debug=True)
+        flask_app.run(debug=True) # this blocks until ctrl+c
+        if flask_app.debug:
+            LOGGER.debug("IN DEBUG MODE")
+        else:
+            LOGGER.debug("NOT IN DEBUG MODE")
+    # only fires on code-change reloads
     except SystemExit:
-        LOGGER.info("Flask app shutting down...")
+        LOGGER.info("Flask app shutting down due to code change...")
+    finally:
         shutdown()
         sys.exit(
             3

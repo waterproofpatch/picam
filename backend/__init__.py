@@ -77,6 +77,12 @@ def allowed_file(filename):
 
 def create_app():
 
+    LOGGER.info("Backend web service registering shutdown function...")
+    atexit.register(shutdown)
+
+    # start the background threads
+    start_threads()
+
     app = Flask(__name__, static_url_path="")
 
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
@@ -135,7 +141,9 @@ def update_ip_thread():
 
         # throttle the IP updates
         if time.time() - last_send < IP_UPDATE_DELAY:
-            LOGGER.info(f"Waiting {IP_UPDATE_DELAY} seconds before updating IP...")
+            LOGGER.info(
+                f"Waiting {IP_UPDATE_DELAY - (time.time() - last_send)} more seconds before updating IP..."
+            )
             continue
 
         # arbitrary placeholder
@@ -180,12 +188,6 @@ def start_threads():
         LOGGER.info(f"Starting {t}")
         t.start()
 
-
-LOGGER.info("Backend web service registering shutdown function...")
-atexit.register(shutdown)
-
-# start the background threads
-start_threads()
 
 # initialize the app etc
 flask_app = create_app()
