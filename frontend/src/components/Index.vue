@@ -3,14 +3,28 @@
     <h2 v-if="error">Error: {{ error }}</h2>
     <h2 v-if="success">Success: {{ success }}</h2>
 
-    <center><button v-on:click="startCapture">Capture</button></center>
-
     <center>
+      <a
+        v-if="loading"
+        class="cam-ui-button"
+        href="#"
+        v-on:click.prevent=""
+      >Taking capture...</a>
+      <a
+        v-else
+        class="cam-ui-button"
+        href="#"
+        v-on:click.prevent="startCapture"
+      >Capture</a>
+    </center>
+
+    <!-- spinning loading wheel -->
+    <!-- <center>
       <div
         v-if="loading"
         class="loader"
       ></div>
-    </center>
+    </center> -->
 
     <!-- print a message if no images are availabel -->
     <p v-if="images.length == 0 && !loading">No captures.</p>
@@ -22,36 +36,35 @@
         v-bind:key="image.id"
         class="card"
       >
-        <a
-          v-bind:href="image.url"
-          style="display: block;"
-        >
-          <div class="card-header">
+        <div class="card-header">
+          <a v-bind:href="image.url">
             <div>
               {{image.id}} - {{image.created_on}}
             </div>
-            <div>
-              <a
-                v-on:click.stop="deleteCapture(image.id)"
-                href="#"
-              >
-                <span style="color: white;">
-                  <font-awesome-icon :icon="['fas', 'trash']" />
-                </span>
-              </a>
-            </div>
+          </a>
+          <div>
+            <a
+              v-on:click.stop="deleteCapture(image.id)"
+              href="#"
+            >
+              <span style="color: white;">
+                <font-awesome-icon :icon="['fas', 'trash']" />
+              </span>
+            </a>
           </div>
-          <div class="card-main">
-            <div class="main-description">
+        </div>
+        <div class="card-main">
+          <div class="main-description">
+            <a v-bind:href="image.url">
               <img
                 v-bind:src=image.url
                 width=100%
                 height=100%
               >
-              <!-- {{image.url}} -->
-            </div>
+            </a>
+            <!-- {{image.url}} -->
           </div>
-        </a>
+        </div>
       </div>
     </section>
   </div>
@@ -181,5 +194,27 @@ export default {
 .main-description {
   color: black;
   text-align: center;
+}
+
+.cam-ui-button {
+  margin-top: 10px;
+  background-color: var(--button-bg-color);
+  border-radius: 28px;
+  border: 1px solid #18ab29;
+  display: inline-block;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: Arial;
+  font-size: 17px;
+  padding: 16px 31px;
+  text-decoration: none;
+  text-shadow: 0px 1px 0px #2f6627;
+}
+.cam-ui-button:hover {
+  background-color: var(--button-bg-color-hover);
+}
+.cam-ui-button:active {
+  position: relative;
+  top: 1px;
 }
 </style>
