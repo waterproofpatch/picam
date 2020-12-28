@@ -2,6 +2,7 @@
 :root {
   --main-bg-color: white;
   --button-bg-color: #409FBF;
+  --button-bg-color-hover: #398ba7;
   --header-bg-color: #409FBF;
   --input-border-color: #3A3F44;
   --input-hover-bg-color: #eeeeee;
