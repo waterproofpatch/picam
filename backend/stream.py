@@ -23,6 +23,50 @@ LOGGER.addHandler(HANDLER)
 LOGGER.setLevel(logging.DEBUG)
 
 
+class FakeCamera:
+    def __init__(self):
+        self.t = threading.Thread(target=self.record_loop)
+        self.do_record = False
+        self.output = None
+
+    def record_loop(self):
+        LOGGER.debug("Starting record loop...")
+        last_index = 1
+
+        while self.do_record:
+
+            # wait a bit between each frame
+            time.sleep(1)
+
+            LOGGER.debug("fake camera sending frame...")
+            if self.output == None:
+                LOGGER.error("Fake camera output is None...")
+                continue
+
+            # write a fake frame
+            if last_index == 1:
+                last_index = 2
+                self.output.write(open("test_images/test_frame_2.jpg", "rb").read())
+            else:
+                last_index = 1
+                self.output.write(open("test_images/test_frame_1.jpg", "rb").read())
+
+        LOGGER.debug("Ending record loop.")
+
+    def stop_recording(self):
+        LOGGER.debug("Fake camera stopped recording...")
+        self.do_record = False
+        LOGGER.debug("Waiting for fake camera to shut down...")
+        self.t.join()
+        LOGGER.debug("Fake camera shut down.")
+
+    def start_recording(self, output):
+        LOGGER.debug("Fake camera starting...")
+        self.output = output
+        self.do_record = True
+        self.t.start()
+
+
 class StreamingOutput(object):
     def __init__(self):
         self.frame = None
@@ -141,66 +185,24 @@ class Camera:
                 camera.annotate_foreground = picamera.Color(y=0.2, u=0, v=0)
                 camera.annotate_background = picamera.Color(y=0.8, u=0, v=0)
 
-                LOGGER.debug("Camera started...")
+                # keep the context alive
+                while True:
+                    if self.event.wait(1):
+                        LOGGER.info("Thread was signalled, stopping...")
+                        camera.stop_recording()
+                        LOGGER.debug("Exiting thread.")
+                        return
         except ModuleNotFoundError:
             LOGGER.debug("Not running on device, can't import model")
-
-            class FakeCamera:
-                def __init__(self):
-                    self.t = threading.Thread(target=self.record_loop)
-                    self.do_record = False
-                    self.output = None
-
-                def record_loop(self):
-                    LOGGER.debug("Starting record loop...")
-                    last_index = 1
-
-                    while self.do_record:
-
-                        # wait a bit between each frame
-                        time.sleep(1)
-
-                        LOGGER.debug("fake camera sending frame...")
-                        if self.output == None:
-                            LOGGER.error("Fake camera output is None...")
-                            continue
-
-                        # write a fake frame
-                        if last_index == 1:
-                            last_index = 2
-                            self.output.write(
-                                open("test_images/test_frame_2.jpg", "rb").read()
-                            )
-                        else:
-                            last_index = 1
-                            self.output.write(
-                                open("test_images/test_frame_1.jpg", "rb").read()
-                            )
-
-                    LOGGER.debug("Ending record loop.")
-
-                def stop_recording(self):
-                    LOGGER.debug("Fake camera stopped recording...")
-                    self.do_record = False
-                    LOGGER.debug("Waiting for fake camera to shut down...")
-                    self.t.join()
-                    LOGGER.debug("Fake camera shut down.")
-
-                def start_recording(self, output):
-                    LOGGER.debug("Fake camera starting...")
-                    self.output = output
-                    self.do_record = True
-                    self.t.start()
-
             camera = FakeCamera()
             camera.start_recording(self.output)
 
-        # keep the context alive
-        while True:
-            LOGGER.debug("Sleeping for event...")
-            if self.event.wait(10):
-                LOGGER.info("Thread was signalled, stopping...")
-                camera.stop_recording()
-                LOGGER.debug("Exiting thread.")
-                return
+            # keep the context alive
+            while True:
+                if self.event.wait(1):
+                    LOGGER.info("Thread was signalled, stopping...")
+                    camera.stop_recording()
+                    LOGGER.debug("Exiting thread.")
+                    return
+
         LOGGER.debug("Camera thread ending...")
