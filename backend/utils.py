@@ -12,36 +12,50 @@ from backend.logger import LOGGER
 # path to a test image for use with development
 TEST_SRC_IMAGE_PATH = "test_images/test_image.jpg"
 
+GLOBALS = {"camera": None}
+
 
 def generate_live_stream():
     # get camera frame
-    LOGGER.info("Starting camera output...")
-    camera = stream.Camera()
-    camera.start()
+    LOGGER.info(f"Starting camera output...")
+    GLOBALS["camera"] = stream.Camera()
+    GLOBALS["camera"].start()
     LOGGER.info("Camera output started...")
     try:
         while True:
-            frame = camera.get_frame()
+            frame = GLOBALS["camera"].get_frame()
             if frame is None:
                 LOGGER.error("Failed getting frame.")
-                camera.stop()
+                GLOBALS["camera"].stop()
                 return "Error getting stream."
             yield (
                 b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n\r\n"
             )
     finally:
         LOGGER.info("Stopping camera output...")
-        camera.stop()
+        GLOBALS["camera"].stop()
         LOGGER.info("Camera output stopped...")
+
+
+def stop_stream():
+    """
+    Stop the camera stream
+    """
+    if GLOBALS["camera"]:
+        GLOBALS["camera"].stop()
+        GLOBALS["camera"] = None
 
 
 def take_picture():
     """
-    Take a picture (or return static, if not connected to camera).
+    Take a picture (or return static, if not connected to camera.
     :return: True if taking a picture was successful.
     "return: False if taking a picture failed.
     """
     img_uuid = uuid.uuid4()
+
+    # if the camera is busy streaming, stop the stream so we can take a snapshot.
+    stop_stream()
 
     # debugging without a camera means faking an image capture. Achieve this by
     # copying a pre-existing image and naming it uniquely.

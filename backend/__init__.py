@@ -144,15 +144,15 @@ def update_ip_thread():
                 if ip == last_good_ip:
                     LOGGER.debug("Skipping update, IP is the same as it used to be")
                     continue
-                last_good_ip = ip
             else:
                 LOGGER.debug(f"No IP in response, will try later...")
                 continue
         except Exception as e:
-            LOGGER.error(f"Error posting to public website: {e}")
+            LOGGER.error(f"Error getting public IP: {e}")
         try:
             LOGGER.debug(f"Sending IP to {AWS_URL}")
             requests.post(AWS_URL, json={"ip": ip}, timeout=3)
+            last_good_ip = ip
         except Exception as e:
             LOGGER.error(f"Error posting to public website: {e}")
         finally:
