@@ -2,7 +2,7 @@
   <div class="header">
     <div class="inner-header">
       <div>
-        Pi-cam - version 0.0.1
+        Pi-cam - version 1.0.0
       </div>
       <div>
         <ul>

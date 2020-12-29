@@ -27,9 +27,6 @@ from backend import jwt, db, flask_app, stream, utils
 from backend.models import User, Image, RevokedTokenModel
 from backend.logger import LOGGER
 
-# globals
-PASSWORD_MIN_LEN = 13
-
 
 @flask_app.route("/api/stream.mjpg")
 def live_stream():
@@ -44,7 +41,6 @@ def send_images(path):
     """
     Image file resolution for development
     """
-    LOGGER.debug("sending file")
     return send_from_directory("../test_images", path)
 
 
