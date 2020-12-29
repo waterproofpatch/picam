@@ -3,14 +3,7 @@
     <h2 v-if="error">Error: {{ error }}</h2>
     <h2 v-if="success">Success: {{ success }}</h2>
 
-    Stream:
-    <center>
-      <img
-        src="/api/stream.mjpg"
-        width="1296"
-        height="730"
-      />
-    </center>
+    <img src="/api/stream.mjpg" />
 
   </div>
 </template>

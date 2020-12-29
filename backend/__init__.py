@@ -2,7 +2,6 @@
 # native imports
 import os
 import re
-import logging
 import requests
 import threading
 import atexit
@@ -16,10 +15,8 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 
-# installed imports
-import colorlog
-
 from backend import stream
+from backend.logger import LOGGER
 
 GET_IP_URL = "http://myip.dnsomatic.com"  # prod
 # GET_IP_URL = "http://127.0.0.1:5002"  # dev
@@ -30,18 +27,6 @@ INTERVAL = 5
 IP_UPDATE_DELAY = 20
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-# get a logger for use everywhere
-HANDLER = colorlog.StreamHandler()
-HANDLER.setFormatter(
-    colorlog.ColoredFormatter(
-        "%(asctime)s:%(log_color)s%(levelname)s:%(filename)s:%(lineno)s:%(message)s"
-    ),
-)
-
-LOGGER = colorlog.getLogger(__name__)
-LOGGER.addHandler(HANDLER)
-LOGGER.setLevel(logging.DEBUG)
 
 
 def create_db(app):
@@ -60,19 +45,6 @@ def create_jwt(app):
     # init the JWT manager
     jwt = JWTManager(app)
     return jwt
-
-
-def allowed_file(filename):
-    """
-    Check if a filename has an extention that is allowed
-
-    :param filename: the filename to check
-    :return: True if the filename has an extension that is allowed
-    :return: False otherwise
-    """
-
-    allowed_extensions = {"png", "jpg", "jpeg", "gif"}
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
 def create_app():
@@ -118,7 +90,7 @@ def create_app():
 
 def shutdown():
     """
-    TODO shut the camera streaming thread(s) down here.
+    Shutdown the IP update thread here.
     """
     LOGGER.info("Shutting down...")
     GLOBALS["thread_event"].set()
@@ -126,6 +98,21 @@ def shutdown():
         LOGGER.info(f"Waiting on {t} to join...")
         t.join()
         LOGGER.info(f"{t} joined")
+
+
+def start_threads():
+    """
+    Start all threads and create signals.
+    """
+    # start all background threads
+    GLOBALS["threads"] = [threading.Thread(target=update_ip_thread)]
+
+    # create a signal they'll terminate on
+    GLOBALS["thread_event"] = threading.Event()
+
+    for t in GLOBALS["threads"]:
+        LOGGER.info(f"Starting {t}")
+        t.start()
 
 
 def update_ip_thread():
@@ -172,21 +159,6 @@ def update_ip_thread():
             pass
 
     LOGGER.info("IP update thread exiting...")
-
-
-def start_threads():
-    """
-    Start all threads and create signals
-    """
-    # start all background threads
-    GLOBALS["threads"] = [threading.Thread(target=update_ip_thread)]
-
-    # create a signal they'll terminate on
-    GLOBALS["thread_event"] = threading.Event()
-
-    for t in GLOBALS["threads"]:
-        LOGGER.info(f"Starting {t}")
-        t.start()
 
 
 # initialize the app etc

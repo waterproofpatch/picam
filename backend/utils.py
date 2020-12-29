@@ -4,8 +4,9 @@ import shutil
 import time
 
 # my imports, from __init__
-from backend import LOGGER, stream, flask_app, db
+from backend import stream, flask_app, db
 from backend.models import Image
+from backend.logger import LOGGER
 
 
 # path to a test image for use with development

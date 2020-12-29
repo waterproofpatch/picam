@@ -23,8 +23,9 @@ from flask_jwt_extended import (
 )
 
 # my imports, from __init__
-from backend import jwt, db, flask_app, allowed_file, stream, LOGGER, utils
+from backend import jwt, db, flask_app, stream, utils
 from backend.models import User, Image, RevokedTokenModel
+from backend.logger import LOGGER
 
 # globals
 PASSWORD_MIN_LEN = 13

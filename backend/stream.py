@@ -12,15 +12,7 @@ import numpy
 import datetime
 from PIL import ImageFont, ImageDraw, Image
 
-HANDLER = colorlog.StreamHandler()
-HANDLER.setFormatter(
-    colorlog.ColoredFormatter(
-        "%(asctime)s:%(log_color)s%(levelname)s:%(filename)s:%(lineno)s:%(message)s"
-    )
-)
-LOGGER = colorlog.getLogger(__name__)
-LOGGER.addHandler(HANDLER)
-LOGGER.setLevel(logging.DEBUG)
+from backend.logger import LOGGER
 
 
 class FakeCamera:
