@@ -7,10 +7,10 @@ import time
 
 # installed imports
 import colorlog
-from PIL import ImageFont, ImageDraw, Image
 import cv2
-import numpy as np
-import datetime as dt
+import numpy
+import datetime
+from PIL import ImageFont, ImageDraw, Image
 
 HANDLER = colorlog.StreamHandler()
 HANDLER.setFormatter(
@@ -128,7 +128,7 @@ class Camera:
             # Convert to PIL Image
             cv2.CV_LOAD_IMAGE_COLOR = 1  # set flag to 1 to give colour image
 
-            npframe = np.fromstring(frame, dtype=np.uint8)
+            npframe = numpy.fromstring(frame, dtype=numpy.uint8)
             pil_frame = cv2.imdecode(npframe, cv2.CV_LOAD_IMAGE_COLOR)
 
             cv2_im_rgb = cv2.cvtColor(pil_frame, cv2.COLOR_BGR2RGB)
@@ -140,7 +140,7 @@ class Camera:
             try:
                 font_file = "/usr/share/fonts/truetype/freefont/FreeSans.ttf"
                 font = ImageFont.truetype(font_file, 25)
-                timestamp_text = "Live stream: " + dt.datetime.now().strftime(
+                timestamp_text = "Live stream: " + datetime.datetime.now().strftime(
                     "%Y-%m-%d %H:%M:%S"
                 )
 
