@@ -37,7 +37,10 @@
         class="card"
       >
         <div class="card-header">
-          <a v-bind:href="image.url">
+          <a
+            v-bind:href="image.url"
+            class="cam-ui-href"
+          >
             <div>
               {{image.id}} - {{image.created_on}}
             </div>
@@ -192,6 +195,14 @@ export default {
 .main-description {
   color: black;
   text-align: center;
+}
+
+.cam-ui-href {
+  color: inherit;
+  text-decoration: none;
+}
+.cam-ui-href:visited {
+  text-decoration: none;
 }
 
 .cam-ui-button {
