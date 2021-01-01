@@ -73,7 +73,6 @@ class StreamingOutput(object):
         self.condition = threading.Condition()
 
     def write(self, buf):
-        LOGGER.debug("write called...")
         if buf.startswith(b"\xff\xd8"):
             # New frame, copy the existing buffer's content and notify all
             # clients it's available
