@@ -16,7 +16,7 @@ from flask_restful import Resource, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # my imports, some from __init__
-from backend import flask_app, api, views, db, models, stream
+from backend import flask_app, api, views, db, models
 from . import LOGGER, shutdown
 
 api.add_resource(views.Images, "/api/images")
@@ -28,11 +28,12 @@ api.add_resource(views.TokenRefresh, "/api/refresh")
 
 def add_default_user():
     """
-    Add a user to the database. On the production system,
-    LOGIN_EMAIL and LOGIN_PASSWORD must be set in order for legitimate
+    Add a user to the database. On the production system, LOGIN_EMAIL and
+    LOGIN_PASSWORD environment variables must be set in order for legitimate
     credentials to be applied. If these environment variables are not set,
     the hardcoded credentials will be applied.
     """
+
     # add the test user. If the environment variables are not set, the
     # credentials are assumed to be dummy credentials.
     if (
@@ -51,6 +52,10 @@ def add_default_user():
             password=base64.b64encode(hashed_pw).decode(),
         )
         LOGGER.debug(f"Adding user {new_user}...")
+
+        if os.environ.get("LOGIN_PASSWORD", None) is None:
+            LOGGER.error("Default password in use.")
+
         db.session.add(new_user)
         db.session.commit()
 
@@ -59,6 +64,7 @@ def init_db(db, drop_all=False):
     """
     Initialize the database.
     """
+
     LOGGER.info(f"Initializing DB {db}")
     db.init_app(flask_app)
 
