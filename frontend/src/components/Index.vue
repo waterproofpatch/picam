@@ -5,7 +5,7 @@
 
     <center>
       <a
-        v-if="loading"
+        v-if="takingCapture"
         class="cam-ui-button"
         href="#"
         v-on:click.prevent=""
@@ -19,12 +19,12 @@
     </center>
 
     <!-- spinning loading wheel -->
-    <!-- <center>
+    <center>
       <div
         v-if="loading"
         class="loader"
       ></div>
-    </center> -->
+    </center>
 
     <!-- print a message if no images are availabel -->
     <p v-if="images.length == 0 && !loading">No captures.</p>
@@ -81,6 +81,7 @@ export default {
       error: null,
       success: null,
       loading: false,
+      takingCapture: false,
     };
   },
   mounted() {
@@ -89,7 +90,6 @@ export default {
   methods: {
     deleteCapture: function (id) {
       console.log("Deleting " + id);
-      this.loading = true;
       this.error = null;
       this.axios
         .delete("/api/images/" + id)
@@ -100,12 +100,10 @@ export default {
           console.log(error);
           this.error = error.response.data.error;
         })
-        .finally(() => {
-          this.loading = false;
-        });
+        .finally(() => {});
     },
     startCapture: function () {
-      this.loading = true;
+      this.takingCapture = true;
       this.error = null;
       this.axios
         .post("/api/images")
@@ -118,7 +116,7 @@ export default {
           this.error = error.response.data.error;
         })
         .finally(() => {
-          this.loading = false;
+          this.takingCapture = false;
         });
     },
     getImages: function () {
