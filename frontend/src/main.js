@@ -78,7 +78,7 @@ axios.interceptors.response.use(
   /* async so we can 'await' for axios functions to return */
   async function(error) {
     /* expired token, we'll try to refresh the token and try again. */
-    if (error.response.status === 401) {
+    if (error.response.status === 402) {
       /* don't recur into /api/refresh if it's the refresh token that expired... */
       if (error.config.url === "/api/refresh") {
         console.warn("Refresh token expired.");

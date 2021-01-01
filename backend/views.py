@@ -27,6 +27,8 @@ from backend import jwt, db, flask_app, stream, utils
 from backend.models import User, Image, RevokedTokenModel
 from backend.logger import LOGGER
 
+GLOBALS = {"camera": stream.Camera()}
+
 
 @flask_app.route("/api/stream.mjpg")
 def live_stream():
@@ -68,7 +70,7 @@ class Images(Resource):
         Start the camera and take a picture.
         """
         LOGGER.debug("starting capture...")
-        if not utils.take_picture():
+        if not GLOBALS["camera"].take_picture(flask_app):
             return {"error": "Failed taking picture"}, 400
 
         return [x.as_json() for x in Image.query.order_by(desc(Image.id)).all()]
@@ -216,5 +218,5 @@ def TokenExpiredCallback(expired_token):
     LOGGER.error("expired token!")
     return (
         jsonify({}),
-        401,
+        402,
     )
