@@ -48,7 +48,7 @@ def create_jwt(app):
 
 def create_app():
 
-    LOGGER.info("Backend web service registering shutdown function...")
+    LOGGER.debug("Backend web service registering shutdown function...")
     atexit.register(shutdown)
 
     # start the background threads
@@ -91,12 +91,12 @@ def shutdown():
     """
     Shutdown the IP update thread here.
     """
-    LOGGER.info("Shutting down...")
+    LOGGER.debug("Shutting down IP thread...")
     GLOBALS["thread_event"].set()
     for t in GLOBALS["threads"]:
-        LOGGER.info(f"Waiting on {t} to join...")
+        LOGGER.debug(f"Waiting on {t} to join...")
         t.join()
-        LOGGER.info(f"{t} joined")
+        LOGGER.debug(f"{t} joined")
 
 
 def start_threads():
@@ -110,7 +110,7 @@ def start_threads():
     GLOBALS["thread_event"] = threading.Event()
 
     for t in GLOBALS["threads"]:
-        LOGGER.info(f"Starting {t}")
+        LOGGER.debug(f"Starting {t}")
         t.start()
 
 
@@ -122,12 +122,12 @@ def update_ip_thread():
     last_send = time.time()
     while True:
         if GLOBALS["thread_event"].wait(INTERVAL):
-            LOGGER.info("Signalled. Tearing down.")
+            LOGGER.debug("Signalled. Tearing down.")
             return
 
         # throttle the IP updates
         if time.time() - last_send < IP_UPDATE_DELAY:
-            LOGGER.info(
+            LOGGER.debug(
                 f"Waiting {IP_UPDATE_DELAY - (time.time() - last_send)} more seconds before updating IP..."
             )
             continue
@@ -157,7 +157,7 @@ def update_ip_thread():
         finally:
             pass
 
-    LOGGER.info("IP update thread exiting...")
+    LOGGER.debug("IP update thread exiting...")
 
 
 # initialize the app etc
