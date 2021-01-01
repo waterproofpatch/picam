@@ -4,6 +4,8 @@ import io
 import logging
 import traceback
 import time
+import uuid
+import shutil
 
 # installed imports
 import colorlog
@@ -13,6 +15,11 @@ import datetime
 from PIL import ImageFont, ImageDraw, Image
 
 from backend.logger import LOGGER
+from backend.models import Image as _Image
+from backend import db
+
+# path to a test image for use with development
+TEST_SRC_IMAGE_PATH = "test_images/test_image.jpg"
 
 
 class FakeCamera:
@@ -87,18 +94,87 @@ class Camera:
 
     def start(self):
         LOGGER.debug("Starting camera...")
+        self.camera_started = True
         self.camera_thread.start()
         LOGGER.info("Waiting 10 seconds for camera to start...")
         time.sleep(10)  # camera warm up...
-        self.camera_started = True
 
     def stop(self):
         LOGGER.debug("Signalling thread...")
+        if not self.camera_started:
+            return
         self.event.set()
         LOGGER.debug("Joining thread...")
         self.camera_thread.join()
         LOGGER.debug("Camera thread joined.")
         self.camera_started = False
+
+    def generate_live_stream(self):
+        LOGGER.info(f"Starting camera output...")
+        self.start()
+        LOGGER.info("Camera output started...")
+        try:
+            while True:
+                frame = self.get_frame()
+                if frame is None:
+                    LOGGER.error("Failed getting frame.")
+                    self.stop()
+                    return "Error getting stream."
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n\r\n"
+                )
+        finally:
+            LOGGER.info("Stopping camera output...")
+            self.stop()
+            LOGGER.info("Camera output stopped...")
+
+    def take_picture(self, app):
+        img_uuid = uuid.uuid4()
+
+        # if the camera is busy streaming, stop the stream so we can take a snapshot.
+        self.stop()
+
+        # debugging without a camera means faking an image capture. Achieve this by
+        # copying a pre-existing image and naming it uniquely.
+        if app.debug:
+            shutil.copyfile(TEST_SRC_IMAGE_PATH, f"test_images/{img_uuid}.jpg")
+            image = _Image(url=f"test_images/{img_uuid}.jpg")
+            db.session.add(image)
+            db.session.commit()
+            return True
+
+        # if we're not debugging, try and capture an image from the actual camera.
+        try:
+            # this import not supported on anything but the Pi
+            from picamera import PiCamera
+
+            with PiCamera() as camera:
+                LOGGER.info("Capturing image...")
+                camera.resolution = (1024, 768)
+                camera.start_preview()
+
+                # Camera warm-up time
+                time.sleep(2)
+
+                # /var/www/html/cam is writable by 'pi', and nginx
+                # routes the requests for /cam/ to this location.
+                path = f"/var/www/html/cam/{img_uuid}.jpg"
+                camera.capture(path)
+
+                # store a link to it in the database
+                LOGGER.info(f"Captured image, saved to path {path}, updating db...")
+
+                # nginx routes *.jpg requests appropriately
+                image = _Image(url=f"{img_uuid}.jpg")
+                db.session.add(image)
+                db.session.commit()
+
+                LOGGER.info("Done capturing image...")
+                return True
+        except Exception as e:
+            LOGGER.error(e)
+            return False
 
     def get_frame(self):
         """
