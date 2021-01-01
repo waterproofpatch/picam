@@ -20,7 +20,7 @@ from backend import flask_app, api, views, db, models, stream
 from . import LOGGER, shutdown
 
 api.add_resource(views.Images, "/api/images")
-api.add_resource(views._Image, "/api/images/<int:id>")
+api.add_resource(views.DeleteImage, "/api/images/<int:id>")
 api.add_resource(views.Login, "/api/login")
 api.add_resource(views.Logout, "/api/logout")
 api.add_resource(views.TokenRefresh, "/api/refresh")
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     LOGGER.info("Running app in debug mode from Flask")
 
     try:
-        flask_app.run(debug=True) # this blocks until ctrl+c
+        flask_app.run(debug=True)  # this blocks until ctrl+c
         if flask_app.debug:
             LOGGER.debug("IN DEBUG MODE")
         else:

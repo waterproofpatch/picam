@@ -74,7 +74,7 @@ class Images(Resource):
         return [x.as_json() for x in Image.query.order_by(desc(Image.id)).all()]
 
 
-class _Image(Resource):
+class DeleteImage(Resource):
     """
     Access a single image by its ID
     """
