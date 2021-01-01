@@ -16,7 +16,6 @@ GLOBALS = {"camera": None}
 
 
 def generate_live_stream():
-    # get camera frame
     LOGGER.info(f"Starting camera output...")
     GLOBALS["camera"] = stream.Camera()
     GLOBALS["camera"].start()
@@ -42,6 +41,7 @@ def stop_stream():
     Stop the camera stream
     """
     if GLOBALS["camera"]:
+        LOGGER.debug("stop_stream called")
         GLOBALS["camera"].stop()
         GLOBALS["camera"] = None
 
