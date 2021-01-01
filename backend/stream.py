@@ -89,7 +89,7 @@ class Camera:
         self.camera_started = False
         self.output = StreamingOutput()
         self.event = threading.Event()
-        self.camera_thread = threading.Thread(target=self.camera_thread)
+        self.camera_thread = threading.Thread(target=self.recording_thread)
 
     def start(self):
         LOGGER.debug("Starting camera...")
@@ -101,19 +101,20 @@ class Camera:
     def stop(self):
         LOGGER.debug("Signalling thread...")
         if not self.camera_started:
+            LOGGER.error("Stopping thread that is not marked as started!")
             return
+        self.camera_started = False
         self.event.set()
         LOGGER.debug("Joining thread...")
         self.camera_thread.join()
         LOGGER.debug("Camera thread joined.")
-        self.camera_started = False
 
     def generate_live_stream(self):
         LOGGER.info(f"Starting camera output...")
         self.start()
         LOGGER.info("Camera output started...")
         try:
-            while True:
+            while self.camera_started:
                 frame = self.get_frame()
                 if frame is None:
                     LOGGER.error("Failed getting frame.")
@@ -186,9 +187,9 @@ class Camera:
             return None
 
         with self.output.condition:
-            LOGGER.debug("Waiting for output condition...")
+            LOGGER.debug("Waiting for output to be ready")
             self.output.condition.wait()
-            LOGGER.debug("Got output condition...")
+            LOGGER.debug("Output is ready")
             frame = self.output.frame
 
             # now add timestamp to jpeg
@@ -240,8 +241,8 @@ class Camera:
 
         return frame
 
-    def camera_thread(self):
-        LOGGER.debug("Starting thread...")
+    def recording_thread(self):
+        LOGGER.debug("Recording thread started...")
 
         # only available on the pi
         try:
@@ -255,7 +256,7 @@ class Camera:
                 # keep the context alive
                 while True:
                     if self.event.wait(1):
-                        LOGGER.info("Thread was signalled, stopping...")
+                        LOGGER.info("Recording thread was signalled, stopping...")
                         camera.stop_recording()
                         LOGGER.debug("Exiting thread.")
                         return
