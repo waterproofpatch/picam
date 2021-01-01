@@ -15,7 +15,6 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 
-from backend import stream
 from backend.logger import LOGGER
 
 GET_IP_URL = "http://myip.dnsomatic.com"  # prod
