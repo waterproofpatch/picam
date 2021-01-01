@@ -23,7 +23,7 @@ from flask_jwt_extended import (
 )
 
 # my imports, from __init__
-from backend import jwt, db, flask_app, stream, utils
+from backend import jwt, db, flask_app, stream, utils, constants
 from backend.models import User, Image, RevokedTokenModel
 from backend.logger import LOGGER
 
@@ -71,7 +71,7 @@ class Images(Resource):
         """
         LOGGER.debug("starting capture...")
         if not GLOBALS["camera"].take_picture(flask_app):
-            return {"error": "Failed taking picture"}, 400
+            return {"error": "Failed taking picture"}, constants.MALFORMED_REQUEST_CODE
 
         return [x.as_json() for x in Image.query.order_by(desc(Image.id)).all()]
 
@@ -118,17 +118,23 @@ class Login(Resource):
         Handle a login request
         """
         if "email" not in request.json:
-            return {"error": "Must supply email address"}, 400
+            return {
+                "error": "Must supply email address"
+            }, constants.MALFORMED_REQUEST_CODE
         if "password" not in request.json:
-            return {"error": "Must supply password"}, 400
+            return {"error": "Must supply password"}, constants.MALFORMED_REQUEST_CODE
 
         user = User.query.filter_by(email=request.json["email"]).first()
         if user is None:
-            return {"error": "Email or password incorrect"}, 401
+            return {
+                "error": "Email or password incorrect"
+            }, constants.INVALID_CREDS_CODE
         if bcrypt.hashpw(
             request.json["password"].encode(), base64.b64decode(user.password)
         ) != base64.b64decode(user.password):
-            return {"error": "Email or password incorrect"}, 401
+            return {
+                "error": "Email or password incorrect"
+            }, constants.INVALID_CREDS_CODE
 
         # response payload has cookies for the token as well as
         # json payload for metadata so frontend can make use of it
@@ -218,5 +224,5 @@ def TokenExpiredCallback(expired_token):
     LOGGER.error("expired token!")
     return (
         jsonify({}),
-        402,
+        constants.TOKEN_EXPIRED_CODE,
     )
