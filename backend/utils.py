@@ -1,33 +1,30 @@
-# native imports
-import uuid
-import shutil
-import time
+"""
+Utilities
+"""
+# standard imports
 
-# my imports, from __init__
-from backend import stream, flask_app, db
-from backend.models import Image
+# project imports
 from backend.logger import LOGGER
 
 
-GLOBALS = {"camera": None}
-
-
-def generate_live_stream():
-    LOGGER.info(f"Starting camera output...")
-    GLOBALS["camera"] = stream.Camera()
-    GLOBALS["camera"].start()
+def generate_live_stream(camera):
+    """
+    Handle the creation of the live stream.
+    """
+    LOGGER.info("Starting camera output...")
+    camera.start()
     LOGGER.info("Camera output started...")
     try:
         while True:
-            frame = GLOBALS["camera"].get_frame()
+            frame = camera.get_frame()
             if frame is None:
                 LOGGER.error("Failed getting frame.")
-                GLOBALS["camera"].stop()
+                camera.stop()
                 return "Error getting stream."
             yield (
                 b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n\r\n"
             )
     finally:
         LOGGER.info("Stopping camera output...")
-        GLOBALS["camera"].stop()
+        camera.stop()
         LOGGER.info("Camera output stopped...")

@@ -1,12 +1,12 @@
 """
 Views backend. Handles items, logins, registrations, logouts and tokens.
 """
-# native imports
+# project imports
 import base64
-import bcrypt
 import os
 
-# flask imports
+# installed imports
+import bcrypt
 from flask import jsonify, send_from_directory, Response
 from flask_restful import Resource, request
 from sqlalchemy import desc
@@ -22,18 +22,22 @@ from flask_jwt_extended import (
     unset_jwt_cookies,
 )
 
-# my imports, from __init__
-from backend import jwt, db, flask_app, stream, utils, constants
+# project imports
+from backend import jwt, db, flask_app, utils, constants
+from backend.camera import Camera
 from backend.models import User, Image, RevokedTokenModel
 from backend.logger import LOGGER
 
-GLOBALS = {"camera": stream.Camera()}
+GLOBALS = {"camera": Camera()}
 
 
 @flask_app.route("/api/stream.mjpg")
 def live_stream():
+    """
+    Endpoint for starting the live stream.
+    """
     return Response(
-        utils.generate_live_stream(),
+        utils.generate_live_stream(GLOBALS["camera"]),
         mimetype="multipart/x-mixed-replace; boundary=frame",
     )
 
@@ -48,13 +52,7 @@ def send_images(path):
 
 class Images(Resource):
     """
-    Images endpoint
-
-    Arguments:
-        Resource {Resource} - Flask resource
-
-    Returns:
-        tuple - {'message'}, status_code
+    Get images and request pictures from the camera.
     """
 
     @jwt_required
@@ -82,23 +80,23 @@ class DeleteImage(Resource):
     """
 
     @jwt_required
-    def delete(self, id):
+    def delete(self, _id):
         """
         Delete an image
         """
-        LOGGER.debug(f"Delete request for {id}")
+        LOGGER.debug("Delete request for %d", _id)
 
         # remove from disk
         if flask_app.debug:
-            path = Image.query.filter_by(id=id).first().url
+            path = Image.query.filter_by(id=_id).first().url
         else:
             path = os.path.join(
-                "/var/www/html/cam/", Image.query.filter_by(id=id).first().url
+                "/var/www/html/cam/", Image.query.filter_by(id=_id).first().url
             )
-        LOGGER.debug(f"removing {path}")
+        LOGGER.debug("removing %s", path)
         os.remove(path)
 
-        Image.query.filter_by(id=id).delete()
+        Image.query.filter_by(id=_id).delete()
         db.session.commit()
         return [x.as_json() for x in Image.query.order_by(desc(Image.id)).all()]
 
@@ -198,30 +196,20 @@ class TokenRefresh(Resource):
 
 
 @jwt.token_in_blacklist_loader
-def TokenCheckBlacklist(decrypted_token):
-    """Check if a token is blacklisted
-
-    Arguments:
-        Resource {Resource} -- Flask resource
-
-    Returns:
-        tuple -- {'message'}, status_code
+def token_check_blacklist(decrypted_token):
+    """
+    Check if a token is blacklisted.
     """
     jti = decrypted_token["jti"]
     return RevokedTokenModel.is_jti_blacklisted(jti)
 
 
 @jwt.expired_token_loader
-def TokenExpiredCallback(expired_token):
-    """Called when a token is expired
-
-    Arguments:
-        Resource {Resource} -- Flask resource
-
-    Returns:
-        tuple -- {'message'}, status_code
+def token_expired_callback(expired_token):
     """
-    LOGGER.error("expired token!")
+    Check if a token is expired.
+    """
+    LOGGER.error("expired token: %s", expired_token)
     return (
         jsonify({}),
         constants.TOKEN_EXPIRED_CODE,

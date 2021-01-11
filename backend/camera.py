@@ -1,78 +1,44 @@
+"""
+Implementation for the real raspberry pi camera.
+"""
+
 # standard imports
 import threading
 import io
-import logging
-import traceback
 import time
 import uuid
 import shutil
+import datetime
 
 # installed imports
-import colorlog
+from PIL import ImageFont, ImageDraw, Image
 import cv2
 import numpy
-import datetime
-from PIL import ImageFont, ImageDraw, Image
 
+# project imports
 from backend.logger import LOGGER
 from backend.models import Image as _Image
+from backend.fake_camera import FakeCamera
 from backend import db
 
 # path to a test image for use with development
 TEST_SRC_IMAGE_PATH = "test_images/test_image.jpg"
 
 
-class FakeCamera:
-    def __init__(self):
-        self.t = threading.Thread(target=self.record_loop)
-        self.do_record = False
-        self.output = None
-
-    def record_loop(self):
-        LOGGER.debug("Starting record loop...")
-        last_index = 1
-
-        while self.do_record:
-
-            # wait a bit between each frame
-            time.sleep(1)
-
-            LOGGER.debug("fake camera sending frame...")
-            if self.output == None:
-                LOGGER.error("Fake camera output is None...")
-                continue
-
-            # write a fake frame
-            if last_index == 1:
-                last_index = 2
-                self.output.write(open("test_images/test_frame_2.jpg", "rb").read())
-            else:
-                last_index = 1
-                self.output.write(open("test_images/test_frame_1.jpg", "rb").read())
-
-        LOGGER.debug("Ending record loop.")
-
-    def stop_recording(self):
-        LOGGER.debug("Fake camera stopped recording...")
-        self.do_record = False
-        LOGGER.debug("Waiting for fake camera to shut down...")
-        self.t.join()
-        LOGGER.debug("Fake camera shut down.")
-
-    def start_recording(self, output):
-        LOGGER.debug("Fake camera starting...")
-        self.output = output
-        self.do_record = True
-        self.t.start()
-
-
 class StreamingOutput(object):
+    """
+    StreamingOutput target for the Camera writes.
+    """
+
     def __init__(self):
         self.frame = None
         self.buffer = io.BytesIO()
         self.condition = threading.Condition()
 
     def write(self, buf):
+        """
+        Write a frame to output.
+        """
         if buf.startswith(b"\xff\xd8"):
             # New frame, copy the existing buffer's content and notify all
             # clients it's available
@@ -110,7 +76,7 @@ class Camera:
         LOGGER.debug("Camera thread joined.")
 
     def generate_live_stream(self):
-        LOGGER.info(f"Starting camera output...")
+        LOGGER.info("Starting camera output...")
         self.start()
         LOGGER.info("Camera output started...")
         try:
@@ -130,6 +96,11 @@ class Camera:
             LOGGER.info("Camera output stopped...")
 
     def take_picture(self, app):
+        """
+        Tell the camera to take a picture.
+
+        :param app: the application
+        """
         img_uuid = uuid.uuid4()
 
         # if the camera is busy streaming, stop the stream so we can take a snapshot.
@@ -163,7 +134,7 @@ class Camera:
                 camera.capture(path)
 
                 # store a link to it in the database
-                LOGGER.info(f"Captured image, saved to path {path}, updating db...")
+                LOGGER.info("Captured image, saved to path %s, updating db...", path)
 
                 # nginx routes *.jpg requests appropriately
                 image = _Image(url=f"{img_uuid}.jpg")
@@ -246,7 +217,7 @@ class Camera:
 
         # only available on the pi
         try:
-            import picamera
+            import picamera  # pylint: disable=import-error
 
             with picamera.PiCamera(resolution="1296x730", framerate=24) as camera:
                 camera.start_recording(self.output, format="mjpeg")

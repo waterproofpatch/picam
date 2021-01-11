@@ -5,22 +5,18 @@ This is the main entry point for the app.
 UWSGI: module: app(.py), callable: app
 """
 
-# native imports
+# standard imports
 import sys
 import os
 import base64
 import argparse
 
-# flask imports
-from flask_restful import Resource, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
-
-# my imports, some from __init__
+# project imports
 from backend import flask_app, api, views, db, models
 from . import LOGGER, shutdown
 
 api.add_resource(views.Images, "/api/images")
-api.add_resource(views.DeleteImage, "/api/images/<int:id>")
+api.add_resource(views.DeleteImage, "/api/images/<int:_id>")
 api.add_resource(views.Login, "/api/login")
 api.add_resource(views.Logout, "/api/logout")
 api.add_resource(views.TokenRefresh, "/api/refresh")
@@ -51,7 +47,8 @@ def add_default_user():
             email=os.environ.get("LOGIN_EMAIL", "test@gmail.com"),
             password=base64.b64encode(hashed_pw).decode(),
         )
-        LOGGER.debug(f"Adding user {new_user}...")
+
+        LOGGER.debug("Adding user %s...", new_user)
 
         if os.environ.get("LOGIN_PASSWORD", None) is None:
             LOGGER.error("Default password in use.")
@@ -60,12 +57,12 @@ def add_default_user():
         db.session.commit()
 
 
-def init_db(db, drop_all=False):
+def init_db(drop_all=False):
     """
     Initialize the database.
     """
 
-    LOGGER.info(f"Initializing DB {db}")
+    LOGGER.info("Initializing DB %s", db)
     db.init_app(flask_app)
 
     if drop_all:
@@ -79,9 +76,6 @@ def init_db(db, drop_all=False):
 
 
 if __name__ == "__main__":
-    """
-    Entry point
-    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -100,7 +94,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    init_db(db, drop_all=args.dropall)
+    init_db(drop_all=args.dropall)
     if args.initonly:
         shutdown()
         sys.exit(0)

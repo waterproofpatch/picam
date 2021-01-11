@@ -1,3 +1,6 @@
+"""
+Control logging formatting.
+"""
 # standard imports
 import logging
 

@@ -1,3 +1,7 @@
+"""
+Application wide constants.
+"""
+
 # error code to send to frontend when login creds are invalid
 INVALID_CREDS_CODE = 401
 

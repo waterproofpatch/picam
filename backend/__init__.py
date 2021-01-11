@@ -1,20 +1,25 @@
+"""
+Init file.
+"""
 #!/usr/bin/env python3
-# native imports
+
+# standard imports
 import os
 import re
-import requests
 import threading
-import atexit
 from urllib.request import urlopen
+import atexit
 import json
 import time
 
-# flask imports
+# installed imports
+import requests
 from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 
+# project imports
 from backend.logger import LOGGER
 
 GET_IP_URL = "http://myip.dnsomatic.com"  # prod
@@ -29,24 +34,30 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 def create_db(app):
-    # database
-    db = SQLAlchemy(app)
-    return db
+    """
+    database
+    """
+    return SQLAlchemy(app)
 
 
 def create_api(app):
-    # create the Api for endpoints (adding later)
-    api = Api(app)
-    return api
+    """
+    create the Api for endpoints (adding later)
+    """
+    return Api(app)
 
 
 def create_jwt(app):
-    # init the JWT manager
-    jwt = JWTManager(app)
-    return jwt
+    """
+    init the JWT manager
+    """
+    return JWTManager(app)
 
 
 def create_app():
+    """
+    Creates the flask application.
+    """
 
     LOGGER.debug("Backend web service registering shutdown function...")
     atexit.register(shutdown)
@@ -77,9 +88,9 @@ def create_app():
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 60 * 60 * 24 * 30  # 30 days
     # TODO change this to True once we test this
     app.config["JWT_COOKIE_CSRF_PROTECT"] = False
-    app.config[
-        "PROPAGATE_EXCEPTIONS"
-    ] = True  # SignatureExpired handling in prod, see https://github.com/vimalloc/flask-jwt-extended/issues/20
+    app.config["PROPAGATE_EXCEPTIONS"] = True
+    # SignatureExpired handling in prod, see
+    # https://github.com/vimalloc/flask-jwt-extended/issues/20
 
     # only if we're in prod, then use HTTPS only cookies
     app.config["JWT_COOKIE_SECURE"] = os.environ.get("USE_SECURE_COOKIES", False)
@@ -93,15 +104,15 @@ def shutdown():
     """
     LOGGER.debug("Shutting down IP thread...")
     GLOBALS["thread_event"].set()
-    for t in GLOBALS["threads"]:
-        LOGGER.debug(f"Waiting on {t} to join...")
-        t.join()
-        LOGGER.debug(f"{t} joined")
+    for thread in GLOBALS["threads"]:
+        LOGGER.debug("Waiting on %s to join...", thread)
+        thread.join()
+        LOGGER.debug("%s joined", thread)
 
 
 def start_threads():
     """
-    Start all threads and create signals.
+    Start all threads and create events.
     """
     # start all background threads
     GLOBALS["threads"] = [threading.Thread(target=update_ip_thread)]
@@ -109,9 +120,9 @@ def start_threads():
     # create a signal they'll terminate on
     GLOBALS["thread_event"] = threading.Event()
 
-    for t in GLOBALS["threads"]:
-        LOGGER.debug(f"Starting {t}")
-        t.start()
+    for thread in GLOBALS["threads"]:
+        LOGGER.debug("Starting %s", thread)
+        thread.start()
 
 
 def update_ip_thread():
@@ -128,32 +139,33 @@ def update_ip_thread():
         # throttle the IP updates
         if time.time() - last_send < IP_UPDATE_DELAY:
             LOGGER.debug(
-                f"Waiting {IP_UPDATE_DELAY - (time.time() - last_send)} more seconds before updating IP..."
+                "Waiting %d more seconds before updating IP...",
+                IP_UPDATE_DELAY - (time.time() - last_send),
             )
             continue
 
         # arbitrary placeholder
         try:
             last_send = time.time()
-            LOGGER.debug(f"Making post request to... {GET_IP_URL}")
+            LOGGER.debug("Making post request to %s", GET_IP_URL)
             response = requests.get(GET_IP_URL, timeout=3)
-            ip = response.text
-            if re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip):
-                LOGGER.debug(f"Ip is {ip}")
-                if ip == last_good_ip:
+            my_public_ip = response.text
+            if re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", my_public_ip):
+                LOGGER.debug("Ip is %s", my_public_ip)
+                if my_public_ip == last_good_ip:
                     LOGGER.debug("Skipping update, IP is the same as it used to be")
                     continue
             else:
-                LOGGER.debug(f"No IP in response, will try later...")
+                LOGGER.debug("No IP in response, will try later...")
                 continue
-        except Exception as e:
-            LOGGER.error(f"Error getting public IP: {e}")
+        except ConnectionError as connection_error:
+            LOGGER.error("Error getting public IP: %s", connection_error)
         try:
-            LOGGER.debug(f"Sending IP to {AWS_URL}")
-            requests.post(AWS_URL, json={"ip": ip}, timeout=3)
-            last_good_ip = ip
-        except Exception as e:
-            LOGGER.error(f"Error posting to public website: {e}")
+            LOGGER.debug("Sending IP to %s", AWS_URL)
+            requests.post(AWS_URL, json={"ip": my_public_ip}, timeout=3)
+            last_good_ip = my_public_ip
+        except ConnectionError as connection_error:
+            LOGGER.error("Error posting to public website: %s", connection_error)
         finally:
             pass
 
