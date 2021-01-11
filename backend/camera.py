@@ -51,6 +51,10 @@ class StreamingOutput(object):
 
 
 class Camera:
+    """
+    Interface for the Raspberry Pi Camera module.
+    """
+
     def __init__(self):
         self.camera_started = False
         self.output = StreamingOutput()
@@ -58,6 +62,9 @@ class Camera:
         self.camera_thread = threading.Thread(target=self.recording_thread)
 
     def start(self):
+        """
+        Start the camera stream thread.
+        """
         LOGGER.debug("Starting camera...")
         self.camera_started = True
         self.camera_thread.start()
@@ -65,6 +72,9 @@ class Camera:
         time.sleep(10)  # camera warm up...
 
     def stop(self):
+        """
+        Stop the camera stream thread.
+        """
         LOGGER.debug("Signalling thread...")
         if not self.camera_started:
             LOGGER.error("Stopping thread that is not marked as started!")
@@ -76,6 +86,9 @@ class Camera:
         LOGGER.debug("Camera thread joined.")
 
     def generate_live_stream(self):
+        """
+        Start the camera thread and yield frames.
+        """
         LOGGER.info("Starting camera output...")
         self.start()
         LOGGER.info("Camera output started...")
@@ -118,7 +131,7 @@ class Camera:
         # if we're not debugging, try and capture an image from the actual camera.
         try:
             # this import not supported on anything but the Pi
-            from picamera import PiCamera
+            from picamera import PiCamera  # pylint: disable=import-outside-toplevel
 
             with PiCamera() as camera:
                 LOGGER.info("Capturing image...")
@@ -213,11 +226,14 @@ class Camera:
         return frame
 
     def recording_thread(self):
+        """
+        Thread that starts the camera and sets up the output stream.
+        """
         LOGGER.debug("Recording thread started...")
 
         # only available on the pi
         try:
-            import picamera  # pylint: disable=import-error
+            import picamera  # pylint: disable=import-outside-toplevel
 
             with picamera.PiCamera(resolution="1296x730", framerate=24) as camera:
                 camera.start_recording(self.output, format="mjpeg")
