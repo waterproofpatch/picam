@@ -56,17 +56,18 @@ class Camera:
     """
 
     def __init__(self):
-        self.camera_started = False
         self.output = StreamingOutput()
-        self.event = threading.Event()
-        self.camera_thread = threading.Thread(target=self.recording_thread)
+        self.event = None
+        self.camera_thread = None
 
     def start(self):
         """
         Start the camera stream thread.
         """
         LOGGER.debug("Starting camera...")
-        self.camera_started = True
+        self.event = threading.Event()
+        LOGGER.debug("Created event %s", self.event)
+        self.camera_thread = threading.Thread(target=self.recording_thread)
         self.camera_thread.start()
         LOGGER.info("Waiting 10 seconds for camera to start...")
         time.sleep(10)  # camera warm up...
@@ -75,15 +76,15 @@ class Camera:
         """
         Stop the camera stream thread.
         """
-        LOGGER.debug("Signalling thread...")
-        if not self.camera_started:
+        LOGGER.debug("Stopping event %s", self.event)
+        if not self.camera_thread:
             LOGGER.error("Stopping thread that is not marked as started!")
             return
-        self.camera_started = False
         self.event.set()
         LOGGER.debug("Joining thread...")
         self.camera_thread.join()
         LOGGER.debug("Camera thread joined.")
+        self.camera_thread = None
 
     def generate_live_stream(self):
         """
@@ -93,7 +94,7 @@ class Camera:
         self.start()
         LOGGER.info("Camera output started...")
         try:
-            while self.camera_started:
+            while self.camera_thread.is_alive():
                 frame = self.get_frame()
                 if frame is None:
                     LOGGER.error("Failed getting frame.")
@@ -166,7 +167,7 @@ class Camera:
 
         :return: None if camera is not started.
         """
-        if not self.camera_started:
+        if not self.camera_thread.is_alive():
             LOGGER.error("Tried getting a frame before the was started.")
             return None
 
@@ -242,6 +243,7 @@ class Camera:
 
                 # keep the context alive
                 while True:
+                    LOGGER.debug("Waiting on event %s", self.event)
                     if self.event.wait(1):
                         LOGGER.info("Recording thread was signalled, stopping...")
                         camera.stop_recording()

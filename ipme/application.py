@@ -1,7 +1,6 @@
 # standard imports
-import os
 import re
-import json
+import os
 from datetime import datetime
 
 # custom imports
@@ -9,13 +8,13 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource
 
-# EB looks for an 'application' callable by default.
-application = Flask(__name__)
+app = Flask(__name__)
 
-db = SQLAlchemy(application)
-api = Api(application)
+db = SQLAlchemy(app)
+api = Api(app)
 
-application.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 
 
 class Ip(db.Model):
@@ -77,7 +76,7 @@ class IpEndpoint(Resource):
         return {}
 
 
-@application.route("/")
+@app.route("/")
 def get_html():
     """
     Get an HTML page with a link to the camera.
@@ -85,9 +84,9 @@ def get_html():
     if Ip.query.first():
         ip = Ip.query.first().as_json()["ip"]
         last_updated = "Not Implemented"  # ip.as_ison()["last_updated"]
-        return f'<center><div style="font-size: 20px"><a href="https://{ip}:4443">Camera</a><br>Updated on {last_updated}<center>'
+        return f'<center><div style="font-size: 20px"><a href="https://{ip}:4443">Camera</a><br>Updated on {last_updated}</div><center>'
     else:
-        return "No IP reported."
+        return '<center><div style="font-size: 20px">No IP reported.</div></center>'
 
 
 def init_db(db, drop_all=False):
@@ -95,7 +94,7 @@ def init_db(db, drop_all=False):
     Initialize the database.
     """
     print(f"Initializing DB {db}")
-    db.init_app(application)
+    db.init_app(app)
 
     if drop_all:
         print("Dropping tables...")
@@ -110,5 +109,5 @@ init_db(db, drop_all=True)
 
 # run the app.
 if __name__ == "__main__":
-    application.debug = True
-    application.run(port=5001)
+    app.debug = True
+    app.run(port=5001)

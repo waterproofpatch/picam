@@ -23,9 +23,9 @@ from flask_jwt_extended import JWTManager
 from backend.logger import LOGGER
 
 GET_IP_URL = "http://myip.dnsomatic.com"  # prod
-# GET_IP_URL = "http://127.0.0.1:5002"  # dev
-AWS_URL = "http://flask-env.eba-iwmbbt73.us-east-2.elasticbeanstalk.com/ip"
-# AWS_URL = "http://127.0.0.1:5001/"  # dev
+# IP_PROXY_URL = "http://flask-env.eba-iwmbbt73.us-east-2.elasticbeanstalk.com/ip"
+IP_PROXY_URL = "https://ipme-proxy.herokuapp.com/ip"
+# IP_PROXY_URL = "http://127.0.0.1:5001/"  # dev
 GLOBALS = {}
 INTERVAL = 5
 IP_UPDATE_DELAY = 20
@@ -144,7 +144,6 @@ def update_ip_thread():
             )
             continue
 
-        # arbitrary placeholder
         try:
             last_send = time.time()
             LOGGER.debug("Making post request to %s", GET_IP_URL)
@@ -161,11 +160,13 @@ def update_ip_thread():
         except ConnectionError as connection_error:
             LOGGER.error("Error getting public IP: %s", connection_error)
         try:
-            LOGGER.debug("Sending IP to %s", AWS_URL)
-            requests.post(AWS_URL, json={"ip": my_public_ip}, timeout=3)
+            LOGGER.debug("Sending IP to %s", IP_PROXY_URL)
+            requests.post(IP_PROXY_URL, json={"ip": my_public_ip}, timeout=3)
             last_good_ip = my_public_ip
-        except ConnectionError as connection_error:
-            LOGGER.error("Error posting to public website: %s", connection_error)
+        except requests.ConnectionError as connection_error:
+            LOGGER.error("Error posting to IP proxy: %s", connection_error)
+        except requests.HTTPError as http_error:
+            LOGGER.error("Error posting to IP proxy: %s", http_error)
         finally:
             pass
 

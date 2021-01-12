@@ -1,3 +1,5 @@
+gunicorn
+psycopg2-binary
 aniso8601==8.1.0
 attrs==20.3.0
 awsebcli==3.19.2
