@@ -13,3 +13,9 @@ firefox https://ipme-proxy.herokuapp.com/
 ```bash
 heroku logs --tail
 ```
+
+## Drop Database
+
+```bash
+heroku pg:reset DATABASE_URL
+```

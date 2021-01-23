@@ -17,9 +17,6 @@ app = Flask(__name__)
 db = SQLAlchemy(app)
 api = Api(app)
 
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
-
 INDEX_TEMPLATE = """
 <center><div style="font-size: 20px">
 <a href="https://{ip}:4443">
@@ -40,13 +37,13 @@ class Ip(db.Model):
     __tablename__ = "ip"
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String, unique=False, nullable=False)
-    created_on = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def as_json(self):
         """
         JSON representation of this model
         """
-        payload = {"id": self.id, "ip": self.ip, "created_on": "N/A"}
+        payload = {"id": self.id, "ip": self.ip, "last_updated": "N/A"}
 
         return payload
 
@@ -93,23 +90,25 @@ def get_html():
     Get an HTML page with a link to the camera.
     """
     if Ip.query.first():
-        ip_address = Ip.query.first().as_json()["ip"]
-        last_updated = ip_address.as_ison()["last_updated"]
-        return INDEX_TEMPLATE.format(last_updated=last_updated, ip=ip_address)
+        report = Ip.query.first().as_json()
+        return INDEX_TEMPLATE.format(
+            last_updated=report["last_updated"], ip=report["ip"]
+        )
     return '<center><div style="font-size: 20px">No IP reported.</div></center>'
 
 
-def init_db(drop_all=False):
+def init_db():
     """
     Initialize the database.
     """
     print(f"Initializing DB {db}")
+
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
+
+    print(f"App config: {app.config}")
+
     db.init_app(app)
-
-    if drop_all:
-        print("Dropping tables...")
-        db.drop_all()
-
     db.create_all()
     db.session.commit()
 
@@ -118,7 +117,7 @@ def init_db(drop_all=False):
 api.add_resource(IpEndpoint, "/ip")
 
 # init database
-init_db(drop_all=True)
+init_db()
 
 # run the app in debug mode
 if __name__ == "__main__":
