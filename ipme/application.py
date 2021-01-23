@@ -1,9 +1,13 @@
+"""
+Web proxy
+"""
+
 # standard imports
 import re
 import os
 from datetime import datetime
 
-# custom imports
+# installed imports
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource
@@ -15,6 +19,17 @@ api = Api(app)
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
+
+INDEX_TEMPLATE = """
+<center><div style="font-size: 20px">
+<a href="https://{ip}:4443">
+Camera
+</a>
+<br>
+Updated on {last_updated}
+</div>
+<center>
+"""
 
 
 class Ip(db.Model):
@@ -31,11 +46,7 @@ class Ip(db.Model):
         """
         JSON representation of this model
         """
-        payload = {
-            "id": self.id,
-            "ip": self.ip,
-            # "created_on": self.created_on.strftime("%m/%d/%y %I:%M:%S"),
-        }
+        payload = {"id": self.id, "ip": self.ip, "created_on": "N/A"}
 
         return payload
 
@@ -82,14 +93,13 @@ def get_html():
     Get an HTML page with a link to the camera.
     """
     if Ip.query.first():
-        ip = Ip.query.first().as_json()["ip"]
-        last_updated = "Not Implemented"  # ip.as_ison()["last_updated"]
-        return f'<center><div style="font-size: 20px"><a href="https://{ip}:4443">Camera</a><br>Updated on {last_updated}</div><center>'
-    else:
-        return '<center><div style="font-size: 20px">No IP reported.</div></center>'
+        ip_address = Ip.query.first().as_json()["ip"]
+        last_updated = ip_address.as_ison()["last_updated"]
+        return INDEX_TEMPLATE.format(last_updated=last_updated, ip=ip_address)
+    return '<center><div style="font-size: 20px">No IP reported.</div></center>'
 
 
-def init_db(db, drop_all=False):
+def init_db(drop_all=False):
     """
     Initialize the database.
     """
@@ -104,10 +114,14 @@ def init_db(db, drop_all=False):
     db.session.commit()
 
 
+# add resources
 api.add_resource(IpEndpoint, "/ip")
-init_db(db, drop_all=True)
 
-# run the app.
+# init database
+init_db(drop_all=True)
+
+# run the app in debug mode
 if __name__ == "__main__":
+    print("Running from main!")
     app.debug = True
     app.run(port=5001)

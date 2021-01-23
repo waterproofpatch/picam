@@ -1,4 +1,4 @@
 all: deploy
 
-deploy:
+deploy: 
 	git push heroku master
