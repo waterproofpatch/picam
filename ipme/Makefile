@@ -7,6 +7,3 @@ deploy:
 
 droptables:
 	heroku pg:reset DATABASE_URL --confirm ipme-proxy
-
-test:
-	pytest test
