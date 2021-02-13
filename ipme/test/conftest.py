@@ -1,21 +1,42 @@
 # standard imports
-import os
 
 # installed imports
 import pytest
 
-from src.application import Ip
+from src.utils import create_app, create_db, create_api
 
 
-@pytest.fixture(autouse=True, scope="session")
-def init_database():
-    os.environ["DATABASE_URL"] = "something"
-
-
-@pytest.fixture
-def ip_address():
+@pytest.fixture(scope="session")
+def app():
     """
-    A test database user
+    Application fixture.
     """
-    test_ip_address = Ip(ip="1.2.3.4")
-    yield test_ip_address
+    yield create_app()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def api(app):
+    yield create_api(app)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def db(app):
+    """
+    Database fixture.
+    """
+    db = create_db(app)
+
+    with app.app_context():
+        db.create_all()
+        yield db
+        db.drop_all()
+        db.session.commit()
+
+
+@pytest.fixture(scope="function")
+def client(app):
+    """
+    Test client fixture.
+    """
+    with app.test_client() as _client:
+        yield _client

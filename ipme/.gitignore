@@ -5,3 +5,7 @@
 !.elasticbeanstalk/*.global.yml
 venv
 tags
+*.pyc
+lastfailed
+test.db
+stepwise
