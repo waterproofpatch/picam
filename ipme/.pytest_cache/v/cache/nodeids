@@ -1,3 +1,4 @@
 [
-  "test/test_ip.py::test_ip_get"
+  "test/test_ip.py::test_ip_get",
+  "test/test_ip.py::test_ip_post"
 ]
