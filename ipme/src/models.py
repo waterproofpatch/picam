@@ -17,7 +17,11 @@ class Ip(db.Model):
         """
         JSON representation of this model
         """
-        payload = {"id": self.id, "ip": self.ip, "last_updated": "N/A"}
+        payload = {
+            "id": self.id,
+            "ip": self.ip,
+            "last_updated": self.last_updated.ctime(),
+        }
 
         return payload
 
