@@ -4,5 +4,15 @@
   "backend/test/test_items.py::test_delete_image_wrong_id": true,
   "backend/test/test_items.py::test_delete_images_fail_unauthenticated": true,
   "backend/test/test_items.py::test_delete_images_success": true,
-  "backend/test/test_items.py::test_post_images_fail_content_type": true
+  "backend/test/test_items.py::test_get_images": true,
+  "backend/test/test_items.py::test_get_images_fail_unauthenticated": true,
+  "backend/test/test_items.py::test_post_images_fail_content_type": true,
+  "backend/test/test_items.py::test_post_images_fail_unauthenticated": true,
+  "backend/test/test_login.py::test_post_login_missing_email": true,
+  "backend/test/test_login.py::test_post_login_missing_password": true,
+  "backend/test/test_login.py::test_post_login_success": true,
+  "backend/test/test_login.py::test_post_login_success_shortlived_token": true,
+  "backend/test/test_login.py::test_post_login_wrong_email": true,
+  "backend/test/test_login.py::test_post_login_wrong_password": true,
+  "backend/test/test_template.py::test_template": true
 }
